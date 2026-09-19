@@ -1,0 +1,136 @@
+{
+  "appProperties": [],
+  "tasks": [
+    { "id": "home",        "routingPattern": "/",                       "page": { "id": "home" } },
+    { "id": "browse",      "routingPattern": "/browse",                 "page": { "id": "browse" } },
+    { "id": "request",     "routingPattern": "/request",                "page": { "id": "request" } },
+    { "id": "myRequests",  "routingPattern": "/myRequests",             "page": { "id": "myRequests" } },
+    { "id": "manage",      "routingPattern": "/manage",                 "page": { "id": "manage" } },
+    { "id": "returnItem",  "routingPattern": "/returnItem",             "page": { "id": "returnItem" } },
+    { "id": "addItem",     "routingPattern": "/addItem",                "page": { "id": "addItem" } },
+    { "id": "importItems", "routingPattern": "/importItems",            "page": { "id": "importItems" } },
+    { "id": "importResult", "routingPattern": "/importResult",          "page": { "id": "importResult" } },
+    { "id": "approve",     "routingPattern": "/approve/{eventId}",      "page": { "id": "approve" } },
+    { "id": "acknowledge", "routingPattern": "/acknowledge/{eventStepId}", "page": { "id": "acknowledge" } },
+    { "id": "revise",      "routingPattern": "/revise/{eventStepId}",   "page": { "id": "revise" } },
+    { "id": "viewRequest", "routingPattern": "/details/{eventId}",      "page": { "id": "viewRequest" } },
+    { "id": "requestSubmitted", "routingPattern": "/requestSubmitted",   "page": { "id": "requestSubmitted" } },
+    { "id": "hrRequests",  "routingPattern": "/hrRequests",             "page": { "id": "hrRequests" } },
+    { "id": "returnStart", "routingPattern": "/returnStart",            "page": { "id": "returnStart" } },
+    { "id": "returnSubmitted", "routingPattern": "/returnSubmitted",    "page": { "id": "returnSubmitted" } },
+    { "id": "returnHandoff", "routingPattern": "/returnHandoff/{eventStepId}", "page": { "id": "returnHandoff" } },
+    { "id": "returnResolve", "routingPattern": "/returnResolve/{eventStepId}", "page": { "id": "returnResolve" } },
+    { "id": "returnDetails", "routingPattern": "/returnDetails/{eventId}", "page": { "id": "returnDetails" } },
+    { "id": "newItemRequest", "routingPattern": "/newItemRequest",      "page": { "id": "newItemRequest" } },
+    { "id": "newItemSubmitted", "routingPattern": "/newItemSubmitted",  "page": { "id": "newItemSubmitted" } },
+    { "id": "resolveNewItem", "routingPattern": "/resolveNewItem",      "page": { "id": "resolveNewItem" } },
+    { "id": "shipment",    "routingPattern": "/shipment",               "page": { "id": "shipment" } },
+    { "id": "editItem",    "routingPattern": "/editItem",               "page": { "id": "editItem" } },
+    { "id": "errorPage",   "routingPattern": "/errorPage",              "page": { "id": "errorPage" } }
+  ],
+  "applicationId": "equipmentCheckout",
+  "dataProviders": [
+    {
+      "key": "app",
+      "value": "<% `{{apiGatewayEndpoint}}/apps/{{site.applicationId}}/v1/` %>"
+    },
+    {
+      "key": "workday-common",
+      "value": "<% `{{apiGatewayEndpoint}}/common/v1/` %>"
+    },
+    {
+      "key": "workday-staffing",
+      "value": "<% `{{apiGatewayEndpoint}}/staffing/v1/` %>"
+    },
+    {
+      "key": "workday-wql",
+      "value": "<% `{{apiGatewayEndpoint}}/wql/v1/` %>"
+    },
+    {
+      "key": "workday-bp",
+      "value": "<% `{{apiGatewayEndpoint}}/businessProcess/v1/` %>"
+    },
+    {
+      "key": "workday-graph",
+      "value": "<% `{{apiGatewayEndpoint}}/graphql/v1/` %>"
+    },
+    {
+      "key": "orchestration",
+      "value": "<% `{{apiGatewayEndpoint}}/orchestrate/v1/apps/{{site.applicationId}}/orchestrations/` %>"
+    }
+  ],
+  "flowDefinitions": [
+    {
+      "id": "newItemFlow",
+      "flowSteps": [
+        {
+          "id": "newItemRequestStep",
+          "startsFlow": true,
+          "taskId": "newItemRequest",
+          "transitions": [
+            { "order": "a", "value": "newItemSubmittedStep", "condition": "true" }
+          ]
+        },
+        {
+          "id": "newItemSubmittedStep",
+          "endsFlow": true,
+          "taskId": "newItemSubmitted"
+        }
+      ]
+    },
+    {
+      "id": "requestFlow",
+      "flowSteps": [
+        {
+          "id": "requestStep",
+          "startsFlow": true,
+          "taskId": "request",
+          "transitions": [
+            { "order": "a", "value": "requestSubmittedStep", "condition": "true" }
+          ]
+        },
+        {
+          "id": "requestSubmittedStep",
+          "endsFlow": true,
+          "taskId": "requestSubmitted"
+        }
+      ]
+    },
+    {
+      "id": "returnFlow",
+      "flowSteps": [
+        {
+          "id": "returnStartStep",
+          "startsFlow": true,
+          "taskId": "returnStart",
+          "transitions": [
+            { "order": "a", "value": "returnSubmittedStep", "condition": "true" }
+          ]
+        },
+        {
+          "id": "returnSubmittedStep",
+          "endsFlow": true,
+          "taskId": "returnSubmitted"
+        }
+      ]
+    },
+    {
+      "id": "importItemsFlow",
+      "flowSteps": [
+        {
+          "id": "importItemsStep",
+          "startsFlow": true,
+          "taskId": "importItems",
+          "transitions": [
+            { "order": "a", "value": "importResultStep", "condition": "true" }
+          ]
+        },
+        {
+          "id": "importResultStep",
+          "endsFlow": true,
+          "taskId": "importResult"
+        }
+      ]
+    }
+  ]
+}

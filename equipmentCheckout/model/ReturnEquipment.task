@@ -1,0 +1,9 @@
+{
+  "id": 5,
+  "name": "ReturnEquipment",
+  "label": "Return Equipment",
+  "routePath": "/myRequests",
+  "securityDomains": [
+    "RequestEquipment"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "id": "allRequests",
+  "_comment": "Admin view of every request. The manage page narrows this to PENDING in script.",
+  "query": "query allRequests($limit: BigInt, $offset: BigInt) { allRequests: equipmentcheckout_kmccyv_CheckoutRequest(dataSource: {equipmentcheckout_kmccyv_checkoutRequests: {}} limit: $limit offset: $offset) { data { workdayID { id } descriptor status requestedOn dueDate returnedOn purpose decisionNote deliveryMethod deliveryAddress courierName trackingNumber shippedOn trackingNotes item { workdayID { id } descriptor } requester { workdayID { id } descriptor } approver { workdayID { id } descriptor } } total } }",
+  "variables": {
+    "limit": 100,
+    "offset": 0
+  }
+}

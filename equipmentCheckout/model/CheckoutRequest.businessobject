@@ -1,0 +1,132 @@
+{
+  "id": 2,
+  "name": "CheckoutRequest",
+  "label": "Checkout Request",
+  "defaultSecurityDomains": [
+    "ManageEquipment",
+    "RequestEquipment",
+    "ProcessEquipment"
+  ],
+  "defaultCollection": {
+    "name": "checkoutRequests",
+    "label": "Checkout Requests",
+    "description": "Every request to borrow a piece of equipment, through its whole lifecycle"
+  },
+  "fields": [
+    {
+      "id": 1,
+      "name": "item",
+      "label": "Equipment Item",
+      "type": "SINGLE_INSTANCE",
+      "target": "EquipmentItem",
+      "useForDisplay": true,
+      "description": "The catalog item being requested"
+    },
+    {
+      "id": 2,
+      "name": "requester",
+      "label": "Requester",
+      "type": "SINGLE_INSTANCE",
+      "target": "WORKER",
+      "secureByTarget": true,
+      "description": "Worker asking to borrow the item. secureByTarget keeps workers scoped to their own requests"
+    },
+    {
+      "id": 3,
+      "name": "status",
+      "label": "Status",
+      "type": "TEXT",
+      "description": "PENDING, APPROVED, RETURNING (a return handoff is in progress), REJECTED or RETURNED"
+    },
+    {
+      "id": 4,
+      "name": "requestedOn",
+      "label": "Requested On",
+      "type": "DATE",
+      "precision": "DAY",
+      "description": "Date the request was submitted"
+    },
+    {
+      "id": 5,
+      "name": "dueDate",
+      "label": "Due Date",
+      "type": "DATE",
+      "precision": "DAY",
+      "description": "Date the borrower promises to return the item"
+    },
+    {
+      "id": 6,
+      "name": "returnedOn",
+      "label": "Returned On",
+      "type": "DATE",
+      "precision": "DAY",
+      "description": "Date the item actually came back, empty until returned"
+    },
+    {
+      "id": 7,
+      "name": "purpose",
+      "label": "Purpose",
+      "type": "TEXT",
+      "description": "Why the borrower needs the item"
+    },
+    {
+      "id": 8,
+      "name": "approver",
+      "label": "Approver",
+      "type": "SINGLE_INSTANCE",
+      "target": "WORKER",
+      "secureByTarget": false,
+      "description": "Worker who approved or rejected the request"
+    },
+    {
+      "id": 9,
+      "name": "decisionNote",
+      "label": "Decision Note",
+      "type": "TEXT",
+      "description": "Reason given by the approver, especially on a rejection"
+    },
+    {
+      "id": 10,
+      "name": "deliveryMethod",
+      "label": "Delivery Method",
+      "type": "TEXT",
+      "description": "PICKUP (collect at the office) or COURIER"
+    },
+    {
+      "id": 11,
+      "name": "deliveryAddress",
+      "label": "Delivery Address",
+      "type": "TEXT",
+      "description": "Where the courier should deliver, entered by the employee"
+    },
+    {
+      "id": 12,
+      "name": "courierName",
+      "label": "Courier",
+      "type": "TEXT",
+      "description": "Courier company, entered by the HR partner"
+    },
+    {
+      "id": 13,
+      "name": "trackingNumber",
+      "label": "Tracking Number",
+      "type": "TEXT",
+      "description": "Package tracking number, entered by the HR partner"
+    },
+    {
+      "id": 14,
+      "name": "shippedOn",
+      "label": "Shipped On",
+      "type": "DATE",
+      "precision": "DAY",
+      "description": "Date the package left the office"
+    },
+    {
+      "id": 15,
+      "name": "trackingNotes",
+      "label": "Shipping Notes",
+      "type": "TEXT",
+      "description": "Anything else about the shipment, such as a tracking link or expected delivery"
+    }
+  ]
+}

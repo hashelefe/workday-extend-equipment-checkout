@@ -1,0 +1,9 @@
+{
+  "id": 3,
+  "name": "ImportEquipmentItems",
+  "label": "Import Equipment Items",
+  "routePath": "/importItems",
+  "securityDomains": [
+    "ManageEquipment"
+  ]
+}

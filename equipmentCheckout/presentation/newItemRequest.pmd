@@ -1,0 +1,100 @@
+{
+  "id": "newItemRequest",
+  "securityDomains": [
+    "RequestEquipment"
+  ],
+  "script": "<%
+    const categoryOptions = function() {
+      const names = ['Laptop', 'Monitor', 'Phone', 'Headset', 'Tablet', 'Other'];
+      return names.map(name => {{'id': name, 'descriptor': name}});
+    };
+
+    const myWorker = function() {
+      return me.data.worker.data[0];
+    };
+  %>",
+  "endPoints": [
+    {
+      "name": "me",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "graphQuery": { "queryId": "me" },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "newItem",
+        "baseUrlType": "app",
+        "url": "newItemRequests",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "onSend": "<%
+          return {
+            'category': empty(queryParams.category) ? newItemCategory.value[0] : queryParams.category,
+            'itemDescription': itemDescription.value,
+            'justification': justification.value,
+            'requestedBy': {'id': myWorker().workdayID.id},
+            'location': {'id': myWorker().primaryJob.location.workdayID.id},
+            'requestedOn': date:getTodaysDate(date:getDateTimeZone(userTimeZone)),
+            'status': 'OPEN'
+          };
+        %>",
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      }
+    ],
+    "responseErrorDetail": {
+      "errorSummary": "<% error %>",
+      "errors": "<% list:mapAttribute(errors, 'error') %>"
+    }
+  },
+  "presentation": {
+    "pageType": "edit",
+    "title": {
+      "type": "title",
+      "label": "<% presentationLabels.RequestNewItem %>"
+    },
+    "body": {
+      "type": "section",
+      "id": "newItemBody",
+      "children": [
+        {
+          "type": "richText",
+          "id": "newItemGuidance",
+          "enabled": false,
+          "value": "<% presentationLabels.NewItemGuidance %>"
+        },
+        {
+          "type": "text",
+          "id": "chosenCategory",
+          "label": "<% presentationLabels.Category %>",
+          "enabled": false,
+          "value": "<% queryParams.category %>",
+          "render": "<% !empty(queryParams.category) %>"
+        },
+        {
+          "type": "dropdown",
+          "id": "newItemCategory",
+          "label": "<% presentationLabels.Category %>",
+          "required": "<% empty(queryParams.category) %>",
+          "values": "<% categoryOptions() %>",
+          "render": "<% empty(queryParams.category) %>"
+        },
+        {
+          "type": "text",
+          "id": "itemDescription",
+          "label": "<% presentationLabels.ItemDescription %>",
+          "required": true
+        },
+        {
+          "type": "textArea",
+          "id": "justification",
+          "label": "<% presentationLabels.Justification %>",
+          "required": true
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "id": "allEquipment",
+  "_comment": "Every catalog item. Status filtering happens in the PMD script - see README, 'Filtering choices'.",
+  "query": "query allEquipment($limit: BigInt, $offset: BigInt) { allEquipment: equipmentcheckout_kmccyv_EquipmentItem(dataSource: {equipmentcheckout_kmccyv_equipmentItems: {}} limit: $limit offset: $offset) { data { workdayID { id } descriptor assetTag itemName category serialNumber status notes displayLabel location { workdayID { id } descriptor } currentHolder { workdayID { id } descriptor } eligibleFromLevel eligibleLocation { workdayID { id } descriptor } } total } }",
+  "variables": {
+    "limit": 100,
+    "offset": 0
+  }
+}

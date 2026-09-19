@@ -1,0 +1,27 @@
+{
+  "id": "equipmentCheckout",
+  "siteId": "equipmentCheckout",
+  "applicationId": "equipmentCheckout",
+  "languages": [
+    {
+      "code": "en-US",
+      "description": "English (United States)"
+    }
+  ],
+  "siteAuth": {
+    "authTypes": [
+      {
+        "scheme": "SSO",
+        "id": "sso"
+      }
+    ]
+  },
+  "errorPageConfigurations": [
+    { "statusCode": "401", "page": { "id": "errorPage" } },
+    { "statusCode": "404", "page": { "id": "errorPage" } },
+    { "statusCode": "500", "page": { "id": "errorPage" } },
+    { "statusCode": "503", "page": { "id": "errorPage" } }
+  ],
+  "cdnEnabled": true,
+  "siteProperties": []
+}

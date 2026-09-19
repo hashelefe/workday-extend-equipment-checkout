@@ -1,0 +1,246 @@
+{
+  "id": "browse",
+  "securityDomains": [
+    "RequestEquipment"
+  ],
+  "script": "<%
+    const categoryNames = function() {
+      return ['Laptop', 'Monitor', 'Phone', 'Headset', 'Tablet', 'Other'];
+    };
+
+    const myLocationId = function() {
+      return me.data.worker.data[0].primaryJob.location.workdayID.id;
+    };
+
+    /* Management levels count down with seniority (1 is most senior). The level's name carries its
+       number, e.g. '5 Vice President' or 'Level 5', so the first all-digit word is taken. */
+    const myLevel = function() {
+      if (empty(workerLevel.data) || empty(workerLevel.data[0].managementLevel)) { return null; }
+      const numbers = workerLevel.data[0].managementLevel.descriptor.split(' ').filter(word => {validate:match('^[0-9]+$', word)});
+      return empty(numbers) ? null : number:convertStringToInt(numbers[0]);
+    };
+
+    const itemLocation = function(item) {
+      return item.eligibleLocation ?? item.location;
+    };
+
+    /* Visible only at the worker's own location, and only to a senior enough level when the item is restricted. */
+    const isEligible = function(item) {
+      if (empty(itemLocation(item)) || itemLocation(item).workdayID.id != myLocationId()) { return false; }
+      if (empty(item.eligibleFromLevel)) { return true; }
+      return !empty(myLevel()) && myLevel() <= item.eligibleFromLevel;
+    };
+
+    const eligibleItems = function() {
+      if (empty(allEquipment.data.allEquipment.data)) { return []; }
+      return allEquipment.data.allEquipment.data.filter(item => {item.status == 'AVAILABLE' && isEligible(item)});
+    };
+
+    const itemsIn = function(category) {
+      return eligibleItems().filter(item => {item.category == category});
+    };
+
+    const categoryRows = function() {
+      return categoryNames().map(name => {{'name': name, 'count': itemsIn(name).size()}});
+    };
+
+    const levelText = function(item) {
+      return empty(item.eligibleFromLevel) ? presentationLabels.AllLevels : `{{presentationLabels.LevelPrefix}} {{item.eligibleFromLevel}}+`;
+    };
+  %>",
+  "endPoints": [
+    {
+      "name": "me",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "graphQuery": { "queryId": "me" },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "workerLevel",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "wqlQuery": {
+        "queryId": "workerLevel",
+        "parameters": {
+          "workerId": "<% me.data.worker.data[0].workdayID.id %>"
+        }
+      },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "allEquipment",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "graphQuery": { "queryId": "allEquipment" },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    }
+  ],
+  "presentation": {
+    "title": {
+      "type": "title",
+      "label": "<% presentationLabels.BrowseCatalog %>"
+    },
+    "body": {
+      "type": "section",
+      "id": "browseBody",
+      "children": [
+        {
+          "type": "section",
+          "id": "chooseCategorySection",
+          "title": "<% presentationLabels.ChooseCategory %>",
+          "render": "<% empty(queryParams.category) %>",
+          "children": [
+            {
+              "type": "richText",
+              "id": "browseIntro",
+              "enabled": false,
+              "value": "<% presentationLabels.BrowseIntro %>"
+            },
+            {
+              "type": "grid",
+              "gridType": "LIST",
+              "id": "categoryGrid",
+              "rows": "<% categoryRows() %>",
+              "rowVariableName": "cat",
+              "enabled": false,
+              "doNotAdd": true,
+              "doNotRemove": true,
+              "label": "<% presentationLabels.Categories %>",
+              "columns": [
+                {
+                  "type": "column",
+                  "columnId": "catName",
+                  "label": "<% presentationLabels.Category %>",
+                  "cellTemplate": { "type": "text", "id": "catNameCell", "value": "<% cat.name %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "catCount",
+                  "label": "<% presentationLabels.AvailableToYou %>",
+                  "cellTemplate": { "type": "text", "id": "catCountCell", "value": "<% cat.count %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "catAction",
+                  "cellTemplate": {
+                    "type": "button",
+                    "id": "catShowButton",
+                    "action": "LINK",
+                    "label": "<% presentationLabels.ShowItems %>",
+                    "taskReference": {
+                      "taskId": "browse",
+                      "parameterBindings": {
+                        "category": "<% cat.name %>"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "id": "categoryItemsSection",
+          "title": "<% queryParams.category %>",
+          "render": "<% !empty(queryParams.category) %>",
+          "children": [
+            {
+              "type": "grid",
+              "gridType": "LIST",
+              "id": "catalog",
+              "rows": "<% itemsIn(queryParams.category) %>",
+              "rowVariableName": "item",
+              "enabled": false,
+              "doNotAdd": true,
+              "doNotRemove": true,
+              "label": "<% presentationLabels.AvailableEquipment %>",
+              "render": "<% !empty(itemsIn(queryParams.category)) %>",
+              "columns": [
+                {
+                  "type": "column",
+                  "columnId": "itemAssetTag",
+                  "label": "<% presentationLabels.AssetTag %>",
+                  "sortableAndFilterable": true,
+                  "cellTemplate": { "type": "text", "id": "itemAssetTagCell", "value": "<% item.assetTag %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "itemName",
+                  "label": "<% presentationLabels.ItemName %>",
+                  "sortableAndFilterable": true,
+                  "cellTemplate": { "type": "text", "id": "itemNameCell", "value": "<% item.itemName %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "itemLocation",
+                  "label": "<% presentationLabels.Location %>",
+                  "cellTemplate": { "type": "text", "id": "itemLocationCell", "value": "<% itemLocation(item).descriptor %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "itemEligibility",
+                  "label": "<% presentationLabels.Eligibility %>",
+                  "cellTemplate": { "type": "text", "id": "itemEligibilityCell", "value": "<% levelText(item) %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "itemNotes",
+                  "label": "<% presentationLabels.Notes %>",
+                  "cellTemplate": { "type": "text", "id": "itemNotesCell", "value": "<% item.notes %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "itemAction",
+                  "cellTemplate": {
+                    "type": "button",
+                    "id": "itemRequestButton",
+                    "action": "LINK",
+                    "label": "<% presentationLabels.RequestThis %>",
+                    "taskReference": {
+                      "taskId": "request",
+                      "parameterBindings": {
+                        "itemId": "<% item.workdayID.id %>"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "richText",
+              "id": "noneInCategory",
+              "enabled": false,
+              "value": "<% presentationLabels.NoneInCategory %>",
+              "render": "<% empty(itemsIn(queryParams.category)) %>"
+            },
+            {
+              "type": "button",
+              "id": "requestNewItemButton",
+              "action": "LINK",
+              "label": "<% presentationLabels.RequestNewItem %>",
+              "render": "<% empty(itemsIn(queryParams.category)) %>",
+              "taskReference": {
+                "taskId": "newItemRequest",
+                "parameterBindings": {
+                  "category": "<% queryParams.category %>"
+                }
+              }
+            },
+            {
+              "type": "button",
+              "id": "backToCategoriesButton",
+              "action": "LINK",
+              "label": "<% presentationLabels.AllCategories %>",
+              "taskReference": { "taskId": "browse" }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "id": "importResult",
+  "securityDomains": [
+    "ManageEquipment"
+  ],
+  "presentation": {
+    "title": {
+      "type": "title",
+      "label": "<% presentationLabels.ImportResult %>"
+    },
+    "body": {
+      "type": "section",
+      "id": "importResultBody",
+      "children": [
+        {
+          "type": "text",
+          "id": "createdCount",
+          "enabled": false,
+          "label": "<% presentationLabels.ItemsCreated %>",
+          "value": "<% flowVariables.outcome.created %>"
+        },
+        {
+          "type": "richText",
+          "id": "noFailures",
+          "enabled": false,
+          "render": "<% empty(flowVariables.outcome.failed) %>",
+          "value": "<% presentationLabels.NoFailedRows %>"
+        },
+        {
+          "type": "grid",
+          "id": "failedRows",
+          "render": "<% !empty(flowVariables.outcome.failed) %>",
+          "label": "<% presentationLabels.FailedRows %>",
+          "rows": "<% flowVariables.outcome.failed %>",
+          "rowVariableName": "failure",
+          "enabled": false,
+          "doNotAdd": true,
+          "doNotRemove": true,
+          "columns": [
+            {
+              "type": "column",
+              "columnId": "failedRowNumber",
+              "label": "<% presentationLabels.CsvRow %>",
+              "cellTemplate": {
+                "type": "text",
+                "id": "failedRowNumberCell",
+                "value": "<% failure.row %>"
+              }
+            },
+            {
+              "type": "column",
+              "columnId": "failedAssetTag",
+              "label": "<% presentationLabels.AssetTag %>",
+              "cellTemplate": {
+                "type": "text",
+                "id": "failedAssetTagCell",
+                "value": "<% failure.assetTag %>"
+              }
+            },
+            {
+              "type": "column",
+              "columnId": "failedError",
+              "label": "<% presentationLabels.ImportError %>",
+              "cellTemplate": {
+                "type": "text",
+                "id": "failedErrorCell",
+                "value": "<% failure.error %>"
+              }
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "id": "importResultActions",
+          "children": [
+            {
+              "type": "button",
+              "id": "backToManageButton",
+              "action": "LINK",
+              "label": "<% presentationLabels.BackToManage %>",
+              "taskReference": { "taskId": "manage" }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,21 @@
+assetTag,itemName,category,serialNumber,notes
+LT-1001,ThinkPad T14 Gen 4,Laptop,PF4A1B01,Includes 65W USB-C charger
+LT-1002,ThinkPad X1 Carbon Gen 11,Laptop,PF4A1B02,
+LT-1003,MacBook Pro 14 M3,Laptop,C02XK3M1,Includes MagSafe charger
+LT-1004,Dell Latitude 7440,Laptop,DL7440Q4,Docking station not included
+LT-1005,HP EliteBook 840 G10,Laptop,5CG3219XYZ,
+MN-2001,Dell UltraSharp U2723QE,Monitor,CN0G2F01,27 inch 4K with USB-C hub
+MN-2002,Dell UltraSharp U2723QE,Monitor,CN0G2F02,
+MN-2003,LG 34WN80C-B,Monitor,LG34WN803,34 inch ultrawide
+MN-2004,Lenovo ThinkVision P24h-30,Monitor,V90A1234,
+PH-3001,iPhone 15,Phone,F2LXK9P1,Loaner for travel
+PH-3002,Samsung Galaxy S24,Phone,R58W12AB,
+PH-3003,Google Pixel 8,Phone,GP8X4471,Test device for mobile app
+HS-4001,Jabra Evolve2 65,Headset,JB65A001,USB-A dongle in case
+HS-4002,Jabra Evolve2 85,Headset,JB85A002,Noise cancelling
+HS-4003,Poly Voyager Focus 2,Headset,,Charging stand included
+HS-4004,Logitech Zone Vibe 100,Headset,LZV10044,
+TB-5001,iPad Air 11 M2,Tablet,DMPX7Q01,Includes Apple Pencil
+TB-5002,Samsung Galaxy Tab S9,Tablet,R52T88CD,
+OT-6001,Logitech MX Keys and MX Master 3S,Other,LMX3S601,Keyboard and mouse combo
+OT-6002,Anker 737 Power Bank,Other,,For field visits

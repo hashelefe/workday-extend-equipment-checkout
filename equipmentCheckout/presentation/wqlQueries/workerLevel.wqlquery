@@ -1,0 +1,11 @@
+{
+  "id": "workerLevel",
+  "_comment": "The signed-in worker's management level, used for item eligibility. Values are quoted: WQL rejects unquoted ids.",
+  "parameters": ["workerId"],
+  "query": "
+    SELECT workdayID, managementLevel
+    FROM allWorkers
+    WHERE workdayID = '<% workerId %>'
+  ",
+  "limit": "1"
+}

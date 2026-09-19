@@ -1,0 +1,39 @@
+{
+  "id": "AppLinks",
+  "parameters": [ "title", "Browse", "MyRequests", "Manage", "HrRequests" ],
+  "header": {
+    "title": "<% title %>",
+    "icon": "wd-accent-tools"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "<% Browse %>",
+        "taskReference": {
+          "taskId": "browse"
+        }
+      },
+      {
+        "label": "<% MyRequests %>",
+        "taskReference": {
+          "taskId": "myRequests"
+        }
+      }
+    ]
+  },
+  "footer": [
+    {
+      "label": "<% Manage %>",
+      "taskReference": {
+        "taskId": "manage"
+      }
+    },
+    {
+      "label": "<% HrRequests %>",
+      "taskReference": {
+        "taskId": "hrRequests"
+      }
+    }
+  ]
+}

@@ -1,0 +1,148 @@
+{
+  "id": "shipment",
+  "securityDomains": [
+    "ProcessEquipment"
+  ],
+  "script": "<%
+    const theRequest = function() {
+      return empty(currentRequest) ? null : currentRequest.data.currentRequest.data[0];
+    };
+  %>",
+  "endPoints": [
+    {
+      "name": "currentRequest",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "exclude": "<% empty queryParams.requestId %>",
+      "graphQuery": {
+        "queryId": "currentRequest",
+        "parameters": {
+          "requestId": "<% queryParams.requestId %>"
+        }
+      },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "saveShipment",
+        "baseUrlType": "workday-graph",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "graphQuery": {
+          "queryId": "updateRequest",
+          "variables": {
+            "updateRequest_input": {
+              "courierName": "<% courierName.value %>",
+              "trackingNumber": "<% trackingNumber.value %>",
+              "shippedOn": "<% shippedOn.value %>",
+              "trackingNotes": "<% trackingNotes.value %>"
+            },
+            "updateRequest_requestId": {
+              "id": "<% queryParams.requestId %>",
+              "type": "WID"
+            }
+          }
+        },
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      }
+    ],
+    "responseErrorDetail": {
+      "errorSummary": "<% error %>",
+      "errors": "<% list:mapAttribute(errors, 'error') %>"
+    }
+  },
+  "presentation": {
+    "pageType": "edit",
+    "title": {
+      "type": "title",
+      "label": "<% presentationLabels.ShipmentTitle %>"
+    },
+    "body": {
+      "type": "section",
+      "id": "shipmentBody",
+      "children": [
+        {
+          "type": "section",
+          "id": "shipmentRequestSection",
+          "title": "<% presentationLabels.RequestSummary %>",
+          "render": "<% !empty(theRequest()) %>",
+          "children": [
+            {
+              "type": "text",
+              "id": "shipmentItem",
+              "label": "<% presentationLabels.Item %>",
+              "enabled": false,
+              "value": "<% theRequest().item.descriptor %>"
+            },
+            {
+              "type": "text",
+              "id": "shipmentRequester",
+              "label": "<% presentationLabels.Requester %>",
+              "enabled": false,
+              "value": "<% theRequest().requester.descriptor %>"
+            },
+            {
+              "type": "textArea",
+              "id": "shipmentAddress",
+              "label": "<% presentationLabels.DeliveryAddress %>",
+              "enabled": false,
+              "value": "<% theRequest().deliveryAddress %>"
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "id": "shipmentTrackingSection",
+          "title": "<% presentationLabels.TrackingDetails %>",
+          "render": "<% !empty(theRequest()) %>",
+          "children": [
+            {
+              "type": "richText",
+              "id": "shipmentGuidance",
+              "enabled": false,
+              "value": "<% presentationLabels.ShipmentGuidance %>"
+            },
+            {
+              "type": "text",
+              "id": "courierName",
+              "label": "<% presentationLabels.CourierName %>",
+              "required": true,
+              "value": "<% theRequest().courierName %>"
+            },
+            {
+              "type": "text",
+              "id": "trackingNumber",
+              "label": "<% presentationLabels.TrackingNumber %>",
+              "required": true,
+              "value": "<% theRequest().trackingNumber %>"
+            },
+            {
+              "type": "date",
+              "id": "shippedOn",
+              "label": "<% presentationLabels.ShippedOn %>",
+              "datePrecision": "DAY",
+              "required": true,
+              "value": "<% theRequest().shippedOn %>"
+            },
+            {
+              "type": "textArea",
+              "id": "trackingNotes",
+              "label": "<% presentationLabels.TrackingNotes %>",
+              "value": "<% theRequest().trackingNotes %>"
+            }
+          ]
+        },
+        {
+          "type": "richText",
+          "id": "shipmentNotFound",
+          "enabled": false,
+          "value": "<% presentationLabels.NoRequestSelected %>",
+          "render": "<% empty(theRequest()) %>"
+        }
+      ]
+    }
+  }
+}

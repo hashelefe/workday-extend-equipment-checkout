@@ -1,0 +1,13 @@
+{
+  "id": "overdueLoans",
+  "_comment": "Every loan that is still out and past its due date. Used by the manage page and by the overdue reminder orchestration as its data source.",
+  "parameters": ["applicationId", "today"],
+  "query": "
+    SELECT workdayID, item, requester, dueDate, requestedOn
+    FROM <% applicationId + '_checkoutRequests' %>
+    WHERE status = 'APPROVED'
+      AND returnedOn IS NULL
+      AND dueDate < '<% today %>'
+  ",
+  "limit": "100"
+}

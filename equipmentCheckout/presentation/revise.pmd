@@ -1,0 +1,160 @@
+{
+  "id": "revise",
+  "securityDomains": [
+    "RequestEquipment"
+  ],
+  "script": "<%
+    const theRequest = function() {
+      return empty(currentRequest) ? null : currentRequest.data.currentRequest.data[0];
+    };
+
+    const validatePurpose = function(field) {
+      const maxPurposeLength = 250;
+      if (!empty(field.value) && field.value.length() > maxPurposeLength) {
+        field.setError(presentationLabels.PurposeTooLong);
+      } else {
+        field.clearError();
+      }
+    };
+
+    const validateDueDate = function(field) {
+      if (empty(field.value)) {
+        field.clearError();
+      } else if (field.value <= date:getTodaysDate(date:getDateTimeZone(userTimeZone))) {
+        field.setError(presentationLabels.DueDateMustBeFuture);
+      } else {
+        field.clearError();
+      }
+    };
+  %>",
+  "endPoints": [
+    {
+      "name": "bpEventStep",
+      "baseUrlType": "workday-bp",
+      "url": "<% `eventSteps/{{queryParams.eventStepId}}` %>",
+      "authType": "sso",
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "eventInfo",
+      "baseUrlType": "workday-bp",
+      "url": "<% `events/{{bpEventStep.event.id}}` %>",
+      "authType": "sso",
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "currentRequest",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "exclude": "<% empty(eventInfo) %>",
+      "graphQuery": {
+        "queryId": "currentRequest",
+        "parameters": {
+          "requestId": "<% eventInfo['for'].id %>"
+        }
+      },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "reviseRequest",
+        "baseUrlType": "workday-graph",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "graphQuery": {
+          "queryId": "updateRequest",
+          "variables": {
+            "updateRequest_input": {
+              "dueDate": "<% dueDate.value %>",
+              "purpose": "<% purpose.value %>"
+            },
+            "updateRequest_requestId": {
+              "id": "<% eventInfo['for'].id %>",
+              "type": "WID"
+            }
+          }
+        },
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      },
+      {
+        "name": "submitStep",
+        "baseUrlType": "workday-bp",
+        "url": "<% `eventSteps/{{queryParams.eventStepId}}/submit` %>",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "values": [
+          {
+            "outboundPath": "stepAction.id",
+            "value": "<% /* Workday's delivered 'Submit' step action. Without this call the step never completes. */ 'd9e4223e446c11de98360015c5e6daf6' %>"
+          }
+        ],
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      }
+    ],
+    "responseErrorDetail": {
+      "errorSummary": "<% error %>",
+      "errors": "<% list:mapAttribute(errors, 'error') %>"
+    }
+  },
+  "presentation": {
+    "pageType": "edit",
+    "title": {
+      "type": "title",
+      "label": "<% presentationLabels.ReviseTitle %>"
+    },
+    "body": {
+      "type": "section",
+      "id": "reviseBody",
+      "children": [
+        {
+          "type": "section",
+          "id": "reviseSection",
+          "title": "<% presentationLabels.RequestDetails %>",
+          "render": "<% !empty(currentRequest) %>",
+          "children": [
+            {
+              "type": "richText",
+              "id": "reviseGuidance",
+              "enabled": false,
+              "value": "<% presentationLabels.ReviseGuidance %>"
+            },
+            {
+              "type": "text",
+              "id": "reviseItem",
+              "label": "<% presentationLabels.Item %>",
+              "enabled": false,
+              "value": "<% theRequest().item.descriptor %>"
+            },
+            {
+              "type": "date",
+              "id": "dueDate",
+              "label": "<% presentationLabels.DueDate %>",
+              "datePrecision": "DAY",
+              "required": true,
+              "value": "<% theRequest().dueDate %>",
+              "onChange": "<% validateDueDate(self) %>"
+            },
+            {
+              "type": "textArea",
+              "id": "purpose",
+              "label": "<% presentationLabels.Purpose %>",
+              "required": true,
+              "value": "<% theRequest().purpose %>",
+              "onChange": "<% validatePurpose(self) %>"
+            }
+          ]
+        },
+        {
+          "type": "richText",
+          "id": "reviseNotFound",
+          "enabled": false,
+          "value": "<% presentationLabels.RequestNotFound %>",
+          "render": "<% empty(currentRequest) %>"
+        }
+      ]
+    }
+  }
+}

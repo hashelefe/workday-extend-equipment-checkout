@@ -1,0 +1,9 @@
+{
+  "id": 2,
+  "name": "AddEquipmentItem",
+  "label": "Add Equipment Item",
+  "routePath": "/addItem",
+  "securityDomains": [
+    "ManageEquipment"
+  ]
+}

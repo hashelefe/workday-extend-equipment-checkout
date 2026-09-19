@@ -1,0 +1,5 @@
+{
+  "id": "updateRequest",
+  "_comment": "Used for approve, reject and return. The id argument is named after the collection: checkoutRequestsId.",
+  "query": "mutation equipmentcheckout_kmccyv_updateCheckoutRequest($updateRequest_input: Equipmentcheckout_kmccyv_CheckoutRequestsSummary_UpdateInput!, $updateRequest_requestId: IdentifierInput!) { equipmentcheckout_kmccyv_updateCheckoutRequest(input: $updateRequest_input, checkoutRequestsId: $updateRequest_requestId) { workdayID { id } descriptor status requestedOn dueDate returnedOn purpose decisionNote deliveryMethod deliveryAddress courierName trackingNumber shippedOn trackingNotes item { workdayID { id } descriptor } requester { workdayID { id } descriptor } approver { workdayID { id } descriptor } } }"
+}

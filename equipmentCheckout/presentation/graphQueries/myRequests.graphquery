@@ -1,0 +1,9 @@
+{
+  "id": "myRequests",
+  "_comment": "Server-side filter on an instance reference - the one criteria shape proven in the Workday samples.",
+  "parameters": ["requesterId"],
+  "query": "query myRequests($requesterId: ID!) { myRequests: equipmentcheckout_kmccyv_CheckoutRequest(dataSource: {equipmentcheckout_kmccyv_checkoutRequests: {}} where: {requester: {workdayID: {in: [{id: $requesterId}]}}}) { data { workdayID { id } descriptor status requestedOn dueDate returnedOn purpose decisionNote deliveryMethod deliveryAddress courierName trackingNumber shippedOn trackingNotes item { workdayID { id } descriptor } requester { workdayID { id } descriptor } approver { workdayID { id } descriptor } } total } }",
+  "variables": {
+    "requesterId": "<% requesterId %>"
+  }
+}

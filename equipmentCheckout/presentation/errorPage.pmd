@@ -1,0 +1,72 @@
+{
+  "id": "errorPage",
+  "securityDomains": [
+    "RequestEquipment"
+  ],
+  "endPoints": [],
+  "presentation": {
+    "title": {
+      "type": "title",
+      "label": "<% presentationLabels.ErrorTitle %>"
+    },
+    "body": {
+      "type": "section",
+      "id": "errorBody",
+      "horizontal": false,
+      "children": [
+        {
+          "type": "text",
+          "id": "errorSummary401",
+          "visible": "<% errorCode == '401' %>",
+          "label": "<% presentationLabels.ErrorMessageLabel %>",
+          "value": "<% presentationLabels.Error401 %>"
+        },
+        {
+          "type": "text",
+          "id": "errorSummary404",
+          "visible": "<% errorCode == '404' %>",
+          "label": "<% presentationLabels.ErrorMessageLabel %>",
+          "value": "<% presentationLabels.Error404 %>"
+        },
+        {
+          "type": "text",
+          "id": "errorSummary500",
+          "visible": "<% errorCode == '500' %>",
+          "label": "<% presentationLabels.ErrorMessageLabel %>",
+          "value": "<% presentationLabels.Error500 %>"
+        },
+        {
+          "type": "text",
+          "id": "errorSummary503",
+          "visible": "<% errorCode == '503' %>",
+          "label": "<% presentationLabels.ErrorMessageLabel %>",
+          "value": "<% presentationLabels.Error503 %>"
+        },
+        {
+          "type": "text",
+          "id": "errorDetails",
+          "label": "<% presentationLabels.HttpErrorCode + errorCode %>",
+          "value": "<% errorMessage %>"
+        },
+        {
+          "type": "button",
+          "id": "backHome",
+          "action": "LINK",
+          "label": "<% presentationLabels.ReturnHome %>",
+          "taskReference": { "taskId": "home" }
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "richText",
+          "id": "errorFooterText",
+          "enabled": false,
+          "value": "<% presentationLabels.PoweredBy %>"
+        }
+      ]
+    }
+  }
+}

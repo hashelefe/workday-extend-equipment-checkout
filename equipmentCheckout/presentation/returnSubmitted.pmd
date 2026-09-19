@@ -1,0 +1,33 @@
+{
+  "id": "returnSubmitted",
+  "securityDomains": [
+    "RequestEquipment",
+    "ProcessEquipment"
+  ],
+  "presentation": {
+    "microConclusion": true,
+    "title": {
+      "type": "title",
+      "label": "<% presentationLabels.ReturnSubmittedTitle %>"
+    },
+    "body": {
+      "type": "section",
+      "id": "returnSubmittedBody",
+      "children": [
+        {
+          "type": "richText",
+          "id": "returnSubmittedMessage",
+          "enabled": false,
+          "value": "<% presentationLabels.ReturnSubmittedMessage %>"
+        },
+        {
+          "type": "button",
+          "id": "returnSubmittedMyRequests",
+          "action": "LINK",
+          "label": "<% presentationLabels.MyRequests %>",
+          "taskReference": { "taskId": "myRequests" }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "id": "updateItem",
+  "_comment": "Flips an item between AVAILABLE and CHECKED_OUT and sets or clears currentHolder.",
+  "query": "mutation equipmentcheckout_kmccyv_updateEquipmentItem($updateItem_input: Equipmentcheckout_kmccyv_EquipmentItemsSummary_UpdateInput!, $updateItem_itemId: IdentifierInput!) { equipmentcheckout_kmccyv_updateEquipmentItem(input: $updateItem_input, equipmentItemsId: $updateItem_itemId) { workdayID { id } descriptor assetTag itemName status displayLabel currentHolder { workdayID { id } descriptor } } }"
+}

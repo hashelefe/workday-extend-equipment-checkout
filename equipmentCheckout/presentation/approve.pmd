@@ -1,0 +1,112 @@
+{
+  "id": "approve",
+  "securityDomains": [
+    "ManageEquipment",
+    "ProcessEquipment"
+  ],
+  "script": "<%
+    const theRequest = function() {
+      return empty(currentRequest) ? null : currentRequest.data.currentRequest.data[0];
+    };
+  %>",
+  "endPoints": [
+    {
+      "name": "getRequestId",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "wqlQuery": {
+        "queryId": "getRequestIdByEvent",
+        "parameters": {
+          "applicationId": "<% site.applicationId %>",
+          "eventId": "<% queryParams.eventId %>"
+        }
+      },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "currentRequest",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "exclude": "<% empty(getRequestId.data) %>",
+      "graphQuery": {
+        "queryId": "currentRequest",
+        "parameters": {
+          "requestId": "<% getRequestId.data[0].businessProcessTarget.id %>"
+        }
+      },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    }
+  ],
+  "presentation": {
+    "title": {
+      "type": "title",
+      "label": "<% presentationLabels.ApproveTitle %>"
+    },
+    "body": {
+      "type": "section",
+      "id": "approveBody",
+      "children": [
+        {
+          "type": "richText",
+          "id": "approveGuidance",
+          "enabled": false,
+          "value": "<% presentationLabels.ApproveGuidance %>"
+        },
+        {
+          "type": "section",
+          "id": "approveDetailsSection",
+          "title": "<% presentationLabels.RequestSummary %>",
+          "render": "<% !empty(currentRequest) %>",
+          "children": [
+            {
+              "type": "text",
+              "id": "approveItem",
+              "label": "<% presentationLabels.Item %>",
+              "enabled": false,
+              "value": "<% theRequest().item.descriptor %>"
+            },
+            {
+              "type": "text",
+              "id": "approveRequester",
+              "label": "<% presentationLabels.Requester %>",
+              "enabled": false,
+              "value": "<% theRequest().requester.descriptor %>"
+            },
+            {
+              "type": "date",
+              "id": "approveRequestedOn",
+              "label": "<% presentationLabels.RequestedOn %>",
+              "datePrecision": "DAY",
+              "enabled": false,
+              "value": "<% theRequest().requestedOn %>"
+            },
+            {
+              "type": "date",
+              "id": "approveDueDate",
+              "label": "<% presentationLabels.DueDate %>",
+              "datePrecision": "DAY",
+              "enabled": false,
+              "value": "<% theRequest().dueDate %>"
+            },
+            {
+              "type": "textArea",
+              "id": "approvePurpose",
+              "label": "<% presentationLabels.Purpose %>",
+              "enabled": false,
+              "value": "<% theRequest().purpose %>"
+            }
+          ]
+        },
+        {
+          "type": "richText",
+          "id": "approveNotFound",
+          "enabled": false,
+          "value": "<% presentationLabels.RequestNotFound %>",
+          "render": "<% empty(currentRequest) %>"
+        }
+      ]
+    }
+  }
+}

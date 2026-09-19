@@ -1,0 +1,155 @@
+{
+  "id": "returnStart",
+  "securityDomains": [
+    "RequestEquipment",
+    "ProcessEquipment"
+  ],
+  "script": "<%
+    const theRequest = function() {
+      return empty(currentRequest) ? null : currentRequest.data.currentRequest.data[0];
+    };
+
+    /* Only a loan that is actually out can be handed back; RETURNING means a handoff is already running. */
+    const canReturn = function() {
+      return !empty(theRequest()) && theRequest().status == 'APPROVED';
+    };
+  %>",
+  "endPoints": [
+    {
+      "name": "currentRequest",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "exclude": "<% empty queryParams.requestId %>",
+      "graphQuery": {
+        "queryId": "currentRequest",
+        "parameters": {
+          "requestId": "<% queryParams.requestId %>"
+        }
+      },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "equipmentReturn",
+        "baseUrlType": "app",
+        "url": "equipmentReturns",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "onSend": "<%
+          /* The loan's requester is recorded as returnedBy even when an HR partner starts this on their behalf. */
+          return {
+            'item': {'id': theRequest().item.workdayID.id},
+            'checkoutRequest': {'id': queryParams.requestId},
+            'returnedBy': {'id': theRequest().requester.workdayID.id},
+            'initiatedOn': date:getTodaysDate(date:getDateTimeZone(userTimeZone)),
+            'employeeNote': employeeNote.value,
+            'status': 'SUBMITTED',
+            'requiresManagerAction': false
+          };
+        %>",
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      },
+      {
+        "name": "equipmentReturnHandoffEvents",
+        "baseUrlType": "app",
+        "url": "equipmentReturnHandoffEvents",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "values": [
+          {
+            "outboundPath": "businessProcessTarget.id",
+            "value": "<% equipmentReturn.id %>"
+          }
+        ],
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      },
+      {
+        "name": "markReturning",
+        "baseUrlType": "workday-graph",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "graphQuery": {
+          "queryId": "updateRequest",
+          "variables": {
+            "updateRequest_input": {
+              "status": "<% 'RETURNING' %>"
+            },
+            "updateRequest_requestId": {
+              "id": "<% queryParams.requestId %>",
+              "type": "WID"
+            }
+          }
+        },
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      }
+    ],
+    "responseErrorDetail": {
+      "errorSummary": "<% error %>",
+      "errors": "<% list:mapAttribute(errors, 'error') %>"
+    }
+  },
+  "presentation": {
+    "pageType": "edit",
+    "title": {
+      "type": "title",
+      "label": "<% presentationLabels.ReturnEquipmentTitle %>"
+    },
+    "body": {
+      "type": "section",
+      "id": "returnStartBody",
+      "children": [
+        {
+          "type": "section",
+          "id": "returnStartSection",
+          "title": "<% presentationLabels.RequestSummary %>",
+          "render": "<% canReturn() %>",
+          "children": [
+            {
+              "type": "richText",
+              "id": "returnStartGuidance",
+              "enabled": false,
+              "value": "<% presentationLabels.ReturnStartGuidance %>"
+            },
+            {
+              "type": "text",
+              "id": "returnStartItem",
+              "label": "<% presentationLabels.Item %>",
+              "enabled": false,
+              "value": "<% theRequest().item.descriptor %>"
+            },
+            {
+              "type": "text",
+              "id": "returnStartHolder",
+              "label": "<% presentationLabels.Requester %>",
+              "enabled": false,
+              "value": "<% theRequest().requester.descriptor %>"
+            },
+            {
+              "type": "date",
+              "id": "returnStartDueDate",
+              "label": "<% presentationLabels.DueDate %>",
+              "datePrecision": "DAY",
+              "enabled": false,
+              "value": "<% theRequest().dueDate %>"
+            },
+            {
+              "type": "textArea",
+              "id": "employeeNote",
+              "label": "<% presentationLabels.EmployeeNote %>"
+            }
+          ]
+        },
+        {
+          "type": "richText",
+          "id": "returnStartUnavailable",
+          "enabled": false,
+          "value": "<% presentationLabels.ReturnNotPossible %>",
+          "render": "<% !canReturn() %>"
+        }
+      ]
+    }
+  }
+}

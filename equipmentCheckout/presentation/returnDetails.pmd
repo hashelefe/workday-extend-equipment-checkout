@@ -1,0 +1,144 @@
+{
+  "id": "returnDetails",
+  "securityDomains": [
+    "RequestEquipment",
+    "ProcessEquipment"
+  ],
+  "endPoints": [
+    {
+      "name": "eventInfo",
+      "baseUrlType": "workday-bp",
+      "url": "<% `events/{{queryParams.eventId}}` %>",
+      "authType": "sso",
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "theReturn",
+      "baseUrlType": "app",
+      "url": "<% `equipmentReturns/{{eventInfo.for.id}}` %>",
+      "authType": "sso",
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    }
+  ],
+  "presentation": {
+    "title": {
+      "type": "title",
+      "label": "<% presentationLabels.ReturnDetailsTitle %>"
+    },
+    "body": {
+      "type": "section",
+      "id": "returnDetailsBody",
+      "children": [
+        {
+          "type": "section",
+          "id": "returnDetailsHandoff",
+          "title": "<% presentationLabels.ReturnSummary %>",
+          "children": [
+            {
+              "type": "text",
+              "id": "detailsItem",
+              "label": "<% presentationLabels.Item %>",
+              "enabled": false,
+              "value": "<% theReturn.item.descriptor %>"
+            },
+            {
+              "type": "text",
+              "id": "detailsReturnedBy",
+              "label": "<% presentationLabels.ReturnedBy %>",
+              "enabled": false,
+              "value": "<% theReturn.returnedBy.descriptor %>"
+            },
+            {
+              "type": "text",
+              "id": "detailsStatus",
+              "label": "<% presentationLabels.Status %>",
+              "enabled": false,
+              "value": "<% theReturn.status %>"
+            },
+            {
+              "type": "date",
+              "id": "detailsInitiatedOn",
+              "label": "<% presentationLabels.InitiatedOn %>",
+              "datePrecision": "DAY",
+              "enabled": false,
+              "value": "<% theReturn.initiatedOn %>"
+            },
+            {
+              "type": "textArea",
+              "id": "detailsEmployeeNote",
+              "label": "<% presentationLabels.EmployeeNote %>",
+              "enabled": false,
+              "value": "<% theReturn.employeeNote %>"
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "id": "returnDetailsInspection",
+          "title": "<% presentationLabels.InspectionTitle %>",
+          "render": "<% !empty(theReturn.itemCondition) %>",
+          "children": [
+            {
+              "type": "text",
+              "id": "detailsCondition",
+              "label": "<% presentationLabels.ItemCondition %>",
+              "enabled": false,
+              "value": "<% theReturn.itemCondition %>"
+            },
+            {
+              "type": "textArea",
+              "id": "detailsConditionNotes",
+              "label": "<% presentationLabels.ConditionNotes %>",
+              "enabled": false,
+              "value": "<% theReturn.conditionNotes %>"
+            },
+            {
+              "type": "text",
+              "id": "detailsInspectedBy",
+              "label": "<% presentationLabels.InspectedBy %>",
+              "enabled": false,
+              "value": "<% theReturn.inspectedBy.descriptor %>"
+            },
+            {
+              "type": "date",
+              "id": "detailsInspectedOn",
+              "label": "<% presentationLabels.InspectedOn %>",
+              "datePrecision": "DAY",
+              "enabled": false,
+              "value": "<% theReturn.inspectedOn %>"
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "id": "returnDetailsResolution",
+          "title": "<% presentationLabels.ManagerResolution %>",
+          "render": "<% !empty(theReturn.managerAction) %>",
+          "children": [
+            {
+              "type": "text",
+              "id": "detailsManagerAction",
+              "label": "<% presentationLabels.ManagerAction %>",
+              "enabled": false,
+              "value": "<% theReturn.managerAction %>"
+            },
+            {
+              "type": "textArea",
+              "id": "detailsManagerNote",
+              "label": "<% presentationLabels.ManagerNote %>",
+              "enabled": false,
+              "value": "<% theReturn.managerNote %>"
+            },
+            {
+              "type": "text",
+              "id": "detailsResolvedBy",
+              "label": "<% presentationLabels.ResolvedBy %>",
+              "enabled": false,
+              "value": "<% theReturn.resolvedBy.descriptor %>"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

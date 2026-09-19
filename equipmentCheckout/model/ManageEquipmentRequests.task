@@ -1,0 +1,9 @@
+{
+  "id": 4,
+  "name": "ManageEquipmentRequests",
+  "label": "Manage Equipment Requests",
+  "routePath": "/hrRequests",
+  "securityDomains": [
+    "ProcessEquipment"
+  ]
+}

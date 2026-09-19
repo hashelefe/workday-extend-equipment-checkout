@@ -1,0 +1,121 @@
+{
+  "id": "viewRequest",
+  "securityDomains": [
+    "RequestEquipment",
+    "ProcessEquipment"
+  ],
+  "script": "<%
+    const theRequest = function() {
+      return empty(currentRequest) ? null : currentRequest.data.currentRequest.data[0];
+    };
+  %>",
+  "endPoints": [
+    {
+      "name": "getRequestId",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "wqlQuery": {
+        "queryId": "getRequestIdByEvent",
+        "parameters": {
+          "applicationId": "<% site.applicationId %>",
+          "eventId": "<% queryParams.eventId %>"
+        }
+      },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "currentRequest",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "exclude": "<% empty(getRequestId.data) %>",
+      "graphQuery": {
+        "queryId": "currentRequest",
+        "parameters": {
+          "requestId": "<% getRequestId.data[0].businessProcessTarget.id %>"
+        }
+      },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    }
+  ],
+  "presentation": {
+    "title": {
+      "type": "title",
+      "label": "<% presentationLabels.RequestDetailsTitle %>"
+    },
+    "body": {
+      "type": "section",
+      "id": "viewRequestBody",
+      "children": [
+        {
+          "type": "section",
+          "id": "viewRequestSection",
+          "title": "<% presentationLabels.RequestSummary %>",
+          "render": "<% !empty(currentRequest) %>",
+          "children": [
+            {
+              "type": "text",
+              "id": "viewItem",
+              "label": "<% presentationLabels.Item %>",
+              "enabled": false,
+              "value": "<% theRequest().item.descriptor %>"
+            },
+            {
+              "type": "text",
+              "id": "viewRequester",
+              "label": "<% presentationLabels.Requester %>",
+              "enabled": false,
+              "value": "<% theRequest().requester.descriptor %>"
+            },
+            {
+              "type": "text",
+              "id": "viewStatus",
+              "label": "<% presentationLabels.Status %>",
+              "enabled": false,
+              "value": "<% theRequest().status %>"
+            },
+            {
+              "type": "date",
+              "id": "viewRequestedOn",
+              "label": "<% presentationLabels.RequestedOn %>",
+              "datePrecision": "DAY",
+              "enabled": false,
+              "value": "<% theRequest().requestedOn %>"
+            },
+            {
+              "type": "date",
+              "id": "viewDueDate",
+              "label": "<% presentationLabels.DueDate %>",
+              "datePrecision": "DAY",
+              "enabled": false,
+              "value": "<% theRequest().dueDate %>"
+            },
+            {
+              "type": "date",
+              "id": "viewReturnedOn",
+              "label": "<% presentationLabels.ReturnedOn %>",
+              "datePrecision": "DAY",
+              "enabled": false,
+              "value": "<% theRequest().returnedOn %>"
+            },
+            {
+              "type": "textArea",
+              "id": "viewPurpose",
+              "label": "<% presentationLabels.Purpose %>",
+              "enabled": false,
+              "value": "<% theRequest().purpose %>"
+            }
+          ]
+        },
+        {
+          "type": "richText",
+          "id": "viewNotFound",
+          "enabled": false,
+          "value": "<% presentationLabels.RequestNotFound %>",
+          "render": "<% empty(currentRequest) %>"
+        }
+      ]
+    }
+  }
+}

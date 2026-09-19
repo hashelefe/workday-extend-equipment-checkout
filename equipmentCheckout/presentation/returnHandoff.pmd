@@ -1,0 +1,209 @@
+{
+  "id": "returnHandoff",
+  "securityDomains": [
+    "ProcessEquipment"
+  ],
+  "script": "<%
+    const conditionOptions = function() {
+      return [
+        {'id': 'GOOD', 'descriptor': presentationLabels.ConditionGood},
+        {'id': 'WORN', 'descriptor': presentationLabels.ConditionWorn},
+        {'id': 'DAMAGED', 'descriptor': presentationLabels.ConditionDamaged},
+        {'id': 'INCOMPLETE', 'descriptor': presentationLabels.ConditionIncomplete}
+      ];
+    };
+
+    /* Damaged or incomplete items go to the manager; the tenant BP condition reads requiresManagerAction. */
+    const hasIssue = function() {
+      if (empty(itemCondition.value)) { return false; }
+      return itemCondition.value[0] == 'DAMAGED' || itemCondition.value[0] == 'INCOMPLETE';
+    };
+
+    const today = function() {
+      return date:getTodaysDate(date:getDateTimeZone(userTimeZone));
+    };
+  %>",
+  "endPoints": [
+    {
+      "name": "bpEventStep",
+      "baseUrlType": "workday-bp",
+      "url": "<% `eventSteps/{{queryParams.eventStepId}}` %>",
+      "authType": "sso",
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "eventInfo",
+      "baseUrlType": "workday-bp",
+      "url": "<% `events/{{bpEventStep.event.id}}` %>",
+      "authType": "sso",
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "theReturn",
+      "baseUrlType": "app",
+      "url": "<% `equipmentReturns/{{eventInfo.for.id}}` %>",
+      "authType": "sso",
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "me",
+      "baseUrlType": "workday-common",
+      "url": "workers/me",
+      "authType": "sso",
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "recordInspection",
+        "baseUrlType": "app",
+        "url": "<% `equipmentReturns/{{theReturn.id}}` %>",
+        "httpMethod": "PATCH",
+        "authType": "sso",
+        "onSend": "<%
+          return {
+            'itemCondition': itemCondition.value[0],
+            'conditionNotes': conditionNotes.value,
+            'inspectedBy': {'id': me.id},
+            'inspectedOn': today(),
+            'requiresManagerAction': hasIssue(),
+            'status': hasIssue() ? 'AWAITING_MANAGER' : 'COMPLETED'
+          };
+        %>",
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      },
+      {
+        "name": "closeLoan",
+        "baseUrlType": "app",
+        "url": "<% `checkoutRequests/{{theReturn.checkoutRequest.id}}` %>",
+        "httpMethod": "PATCH",
+        "authType": "sso",
+        "onSend": "<%
+          /* The item is physically back either way, so the loan closes here even when the manager still has to act. */
+          return {'status': 'RETURNED', 'returnedOn': today()};
+        %>",
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      },
+      {
+        "name": "releaseItem",
+        "baseUrlType": "workday-graph",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "graphQuery": {
+          "queryId": "updateItem",
+          "variables": {
+            "updateItem_input": {
+              "status": "<% /* A problem item is parked in MAINTENANCE until the manager decides its fate. */ hasIssue() ? 'MAINTENANCE' : 'AVAILABLE' %>"
+            },
+            "updateItem_itemId": {
+              "id": "<% theReturn.item.id %>",
+              "type": "WID"
+            }
+          }
+        },
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      },
+      {
+        "name": "submitStep",
+        "baseUrlType": "workday-bp",
+        "url": "<% `eventSteps/{{queryParams.eventStepId}}/submit` %>",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "values": [
+          {
+            "outboundPath": "stepAction.id",
+            "value": "<% /* Workday's delivered 'Submit' step action. Without this call the step never completes. */ 'd9e4223e446c11de98360015c5e6daf6' %>"
+          }
+        ],
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      }
+    ],
+    "responseErrorDetail": {
+      "errorSummary": "<% error %>",
+      "errors": "<% list:mapAttribute(errors, 'error') %>"
+    }
+  },
+  "presentation": {
+    "pageType": "edit",
+    "title": {
+      "type": "title",
+      "label": "<% presentationLabels.HandoffTitle %>"
+    },
+    "body": {
+      "type": "section",
+      "id": "handoffBody",
+      "children": [
+        {
+          "type": "section",
+          "id": "handoffSummarySection",
+          "title": "<% presentationLabels.ReturnSummary %>",
+          "children": [
+            {
+              "type": "text",
+              "id": "handoffItem",
+              "label": "<% presentationLabels.Item %>",
+              "enabled": false,
+              "value": "<% theReturn.item.descriptor %>"
+            },
+            {
+              "type": "text",
+              "id": "handoffReturnedBy",
+              "label": "<% presentationLabels.ReturnedBy %>",
+              "enabled": false,
+              "value": "<% theReturn.returnedBy.descriptor %>"
+            },
+            {
+              "type": "date",
+              "id": "handoffInitiatedOn",
+              "label": "<% presentationLabels.InitiatedOn %>",
+              "datePrecision": "DAY",
+              "enabled": false,
+              "value": "<% theReturn.initiatedOn %>"
+            },
+            {
+              "type": "textArea",
+              "id": "handoffEmployeeNote",
+              "label": "<% presentationLabels.EmployeeNote %>",
+              "enabled": false,
+              "value": "<% theReturn.employeeNote %>"
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "id": "handoffInspectionSection",
+          "title": "<% presentationLabels.InspectionTitle %>",
+          "children": [
+            {
+              "type": "richText",
+              "id": "handoffGuidance",
+              "enabled": false,
+              "value": "<% presentationLabels.HandoffGuidance %>"
+            },
+            {
+              "type": "dropdown",
+              "id": "itemCondition",
+              "label": "<% presentationLabels.ItemCondition %>",
+              "required": true,
+              "values": "<% conditionOptions() %>"
+            },
+            {
+              "type": "textArea",
+              "id": "conditionNotes",
+              "label": "<% presentationLabels.ConditionNotes %>",
+              "required": true
+            },
+            {
+              "type": "checkBox",
+              "id": "handoffConfirm",
+              "label": "<% presentationLabels.HandoffConfirm %>",
+              "required": true,
+              "value": "<% false %>"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

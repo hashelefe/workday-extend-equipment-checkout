@@ -1,0 +1,7 @@
+{
+  "id": 1,
+  "name": "ManageEquipment",
+  "label": "Manage: Equipment Checkout",
+  "enabledForPageSecurity": true,
+  "enabledForOrchestrationSecurity": true
+}

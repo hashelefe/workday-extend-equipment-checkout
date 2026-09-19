@@ -1,0 +1,466 @@
+{
+  "id": "hrRequests",
+  "securityDomains": [
+    "ProcessEquipment"
+  ],
+  "script": "<%
+    const requestRows = function() {
+      return empty(allRequests.data.allRequests.data) ? [] : allRequests.data.allRequests.data;
+    };
+
+    const byStatus = function(wanted) {
+      return requestRows().filter(request => {request.status == wanted});
+    };
+
+    const closedRequests = function() {
+      return requestRows().filter(request => {request.status == 'RETURNED' || request.status == 'REJECTED'});
+    };
+
+    const openReturns = function() {
+      if (empty(allReturns.data)) { return []; }
+      return allReturns.data.filter(handoff => {handoff.status != 'COMPLETED'});
+    };
+
+    /* Joins a record to its BP event, as Workday's workFromAlmostAnywhere sample does. */
+    const eventFor = function(events, targetId) {
+      if (empty(events.data)) { return null; }
+      return events.data.find(bpEvent => {bpEvent.businessProcessTarget.id == targetId});
+    };
+
+    const processStatus = function(events, targetId) {
+      const bpEvent = eventFor(events, targetId);
+      return empty(bpEvent) ? presentationLabels.NoProcess : bpEvent.status;
+    };
+
+    const processId = function(events, targetId) {
+      const bpEvent = eventFor(events, targetId);
+      return empty(bpEvent) ? null : bpEvent.workdayID;
+    };
+
+    const openNewItems = function() {
+      if (empty(newItems.data)) { return []; }
+      return newItems.data.filter(wish => {wish.status == 'OPEN'});
+    };
+
+    const deliveryText = function(request) {
+      return request.deliveryMethod == 'COURIER' ? presentationLabels.DeliveryCourier : presentationLabels.DeliveryPickup;
+    };
+
+    const isOverdue = function(request) {
+      if (empty(request.dueDate)) { return false; }
+      return request.dueDate < date:getTodaysDate(date:getDateTimeZone(userTimeZone));
+    };
+  %>",
+  "endPoints": [
+    {
+      "name": "allRequests",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "graphQuery": { "queryId": "allRequests" },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "checkoutEvents",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "wqlQuery": {
+        "queryId": "checkoutEvents",
+        "parameters": {
+          "applicationId": "<% site.applicationId %>"
+        }
+      },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "allReturns",
+      "baseUrlType": "app",
+      "url": "equipmentReturns?limit=100",
+      "authType": "sso",
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "returnEvents",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "wqlQuery": {
+        "queryId": "returnEvents",
+        "parameters": {
+          "applicationId": "<% site.applicationId %>"
+        }
+      },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    }
+,
+    {
+      "name": "newItems",
+      "baseUrlType": "app",
+      "url": "newItemRequests?limit=100",
+      "authType": "sso",
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    }
+  ],
+  "presentation": {
+    "title": {
+      "type": "title",
+      "label": "<% presentationLabels.HrRequestsTitle %>"
+    },
+    "body": {
+      "type": "section",
+      "id": "hrBody",
+      "children": [
+        {
+          "type": "richText",
+          "id": "hrIntro",
+          "enabled": false,
+          "value": "<% presentationLabels.HrIntro %>"
+        },
+        {
+          "type": "section",
+          "id": "hrApprovalSection",
+          "title": "<% presentationLabels.InApproval %>",
+          "children": [
+            {
+              "type": "grid",
+              "gridType": "LIST",
+              "id": "hrApprovalGrid",
+              "rows": "<% byStatus('PENDING') %>",
+              "rowVariableName": "req",
+              "enabled": false,
+              "doNotAdd": true,
+              "doNotRemove": true,
+              "label": "<% presentationLabels.PendingRequests %>",
+              "columns": [
+                {
+                  "type": "column",
+                  "columnId": "apprItem",
+                  "label": "<% presentationLabels.Item %>",
+                  "sortableAndFilterable": true,
+                  "cellTemplate": { "type": "text", "id": "apprItemCell", "value": "<% req.item.descriptor %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "apprRequester",
+                  "label": "<% presentationLabels.Requester %>",
+                  "sortableAndFilterable": true,
+                  "cellTemplate": { "type": "text", "id": "apprRequesterCell", "value": "<% req.requester.descriptor %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "apprRequestedOn",
+                  "label": "<% presentationLabels.RequestedOn %>",
+                  "sortableAndFilterable": true,
+                  "cellTemplate": { "type": "date", "id": "apprRequestedOnCell", "datePrecision": "DAY", "dateFormat": "yyyy-MM-dd", "value": "<% req.requestedOn %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "apprDueDate",
+                  "label": "<% presentationLabels.DueDate %>",
+                  "cellTemplate": { "type": "date", "id": "apprDueDateCell", "datePrecision": "DAY", "dateFormat": "yyyy-MM-dd", "value": "<% req.dueDate %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "apprProcessStatus",
+                  "label": "<% presentationLabels.ProcessStatus %>",
+                  "sortableAndFilterable": true,
+                  "cellTemplate": { "type": "text", "id": "apprProcessStatusCell", "value": "<% processStatus(checkoutEvents, req.workdayID.id) %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "apprDelivery",
+                  "label": "<% presentationLabels.DeliveryMethod %>",
+                  "sortableAndFilterable": true,
+                  "cellTemplate": { "type": "text", "id": "apprDeliveryCell", "value": "<% deliveryText(req) %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "apprTracking",
+                  "label": "<% presentationLabels.TrackingNumber %>",
+                  "cellTemplate": { "type": "text", "id": "apprTrackingCell", "value": "<% req.trackingNumber %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "apprShip",
+                  "cellTemplate": {
+                    "type": "button",
+                    "id": "apprShipButton",
+                    "action": "LINK",
+                    "label": "<% presentationLabels.ShippingDetails %>",
+                    "render": "<% req.deliveryMethod == 'COURIER' %>",
+                    "taskReference": { "taskId": "shipment", "parameterBindings": { "requestId": "<% req.workdayID.id %>" } }
+                  }
+                },
+                {
+                  "type": "column",
+                  "columnId": "apprAction",
+                  "cellTemplate": {
+                    "type": "button",
+                    "id": "apprViewButton",
+                    "action": "LINK",
+                    "label": "<% presentationLabels.ViewProcess %>",
+                    "render": "<% !empty(processId(checkoutEvents, req.workdayID.id)) %>",
+                    "taskReference": {
+                      "taskId": "viewRequest",
+                      "parameterBindings": {
+                        "eventId": "<% processId(checkoutEvents, req.workdayID.id) %>"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "id": "hrOnLoanSection",
+          "title": "<% presentationLabels.CurrentlyOnLoan %>",
+          "children": [
+            {
+              "type": "grid",
+              "gridType": "LIST",
+              "id": "hrOnLoanGrid",
+              "rows": "<% byStatus('APPROVED') %>",
+              "rowVariableName": "loan",
+              "enabled": false,
+              "doNotAdd": true,
+              "doNotRemove": true,
+              "label": "<% presentationLabels.OutstandingLoans %>",
+              "columns": [
+                {
+                  "type": "column",
+                  "columnId": "hrLoanItem",
+                  "label": "<% presentationLabels.Item %>",
+                  "sortableAndFilterable": true,
+                  "cellTemplate": { "type": "text", "id": "hrLoanItemCell", "value": "<% loan.item.descriptor %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "hrLoanHolder",
+                  "label": "<% presentationLabels.Requester %>",
+                  "sortableAndFilterable": true,
+                  "cellTemplate": { "type": "text", "id": "hrLoanHolderCell", "value": "<% loan.requester.descriptor %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "hrLoanDue",
+                  "label": "<% presentationLabels.DueDate %>",
+                  "sortableAndFilterable": true,
+                  "cellTemplate": { "type": "date", "id": "hrLoanDueCell", "datePrecision": "DAY", "dateFormat": "yyyy-MM-dd", "value": "<% loan.dueDate %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "hrLoanOverdue",
+                  "label": "<% presentationLabels.Overdue %>",
+                  "cellTemplate": { "type": "text", "id": "hrLoanOverdueCell", "value": "<% isOverdue(loan) ? presentationLabels.Yes : presentationLabels.No %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "hrLoanDelivery",
+                  "label": "<% presentationLabels.DeliveryMethod %>",
+                  "sortableAndFilterable": true,
+                  "cellTemplate": { "type": "text", "id": "hrLoanDeliveryCell", "value": "<% deliveryText(loan) %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "hrLoanTracking",
+                  "label": "<% presentationLabels.TrackingNumber %>",
+                  "cellTemplate": { "type": "text", "id": "hrLoanTrackingCell", "value": "<% loan.trackingNumber %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "hrLoanShip",
+                  "cellTemplate": {
+                    "type": "button",
+                    "id": "hrLoanShipButton",
+                    "action": "LINK",
+                    "label": "<% presentationLabels.ShippingDetails %>",
+                    "render": "<% loan.deliveryMethod == 'COURIER' %>",
+                    "taskReference": { "taskId": "shipment", "parameterBindings": { "requestId": "<% loan.workdayID.id %>" } }
+                  }
+                },
+                {
+                  "type": "column",
+                  "columnId": "hrLoanAction",
+                  "cellTemplate": {
+                    "type": "button",
+                    "id": "hrStartReturnButton",
+                    "action": "LINK",
+                    "label": "<% presentationLabels.StartReturn %>",
+                    "taskReference": {
+                      "taskId": "returnStart",
+                      "parameterBindings": {
+                        "requestId": "<% loan.workdayID.id %>"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "id": "hrReturnsSection",
+          "title": "<% presentationLabels.ReturnsInProgress %>",
+          "children": [
+            {
+              "type": "grid",
+              "gridType": "LIST",
+              "id": "hrReturnsGrid",
+              "rows": "<% openReturns() %>",
+              "rowVariableName": "handoff",
+              "enabled": false,
+              "doNotAdd": true,
+              "doNotRemove": true,
+              "label": "<% presentationLabels.ReturnsInProgress %>",
+              "columns": [
+                {
+                  "type": "column",
+                  "columnId": "retItem",
+                  "label": "<% presentationLabels.Item %>",
+                  "sortableAndFilterable": true,
+                  "cellTemplate": { "type": "text", "id": "retItemCell", "value": "<% handoff.item.descriptor %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "retReturnedBy",
+                  "label": "<% presentationLabels.ReturnedBy %>",
+                  "sortableAndFilterable": true,
+                  "cellTemplate": { "type": "text", "id": "retReturnedByCell", "value": "<% handoff.returnedBy.descriptor %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "retInitiatedOn",
+                  "label": "<% presentationLabels.InitiatedOn %>",
+                  "cellTemplate": { "type": "date", "id": "retInitiatedOnCell", "datePrecision": "DAY", "dateFormat": "yyyy-MM-dd", "value": "<% handoff.initiatedOn %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "retStatus",
+                  "label": "<% presentationLabels.Status %>",
+                  "sortableAndFilterable": true,
+                  "cellTemplate": { "type": "text", "id": "retStatusCell", "value": "<% handoff.status %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "retCondition",
+                  "label": "<% presentationLabels.ItemCondition %>",
+                  "cellTemplate": { "type": "text", "id": "retConditionCell", "value": "<% handoff.itemCondition %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "retProcessStatus",
+                  "label": "<% presentationLabels.ProcessStatus %>",
+                  "cellTemplate": { "type": "text", "id": "retProcessStatusCell", "value": "<% processStatus(returnEvents, handoff.id) %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "retAction",
+                  "cellTemplate": {
+                    "type": "button",
+                    "id": "retViewButton",
+                    "action": "LINK",
+                    "label": "<% presentationLabels.ViewProcess %>",
+                    "render": "<% !empty(processId(returnEvents, handoff.id)) %>",
+                    "taskReference": {
+                      "taskId": "returnDetails",
+                      "parameterBindings": {
+                        "eventId": "<% processId(returnEvents, handoff.id) %>"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "id": "hrNewItemsSection",
+          "title": "<% presentationLabels.NewItemRequests %>",
+          "children": [
+            {
+              "type": "grid",
+              "gridType": "LIST",
+              "id": "hrNewItemsGrid",
+              "rows": "<% openNewItems() %>",
+              "rowVariableName": "wish",
+              "enabled": false,
+              "doNotAdd": true,
+              "doNotRemove": true,
+              "label": "<% presentationLabels.NewItemRequests %>",
+              "columns": [
+                { "type": "column", "columnId": "hrWishItem", "label": "<% presentationLabels.ItemDescription %>", "cellTemplate": { "type": "text", "id": "hrWishItemCell", "value": "<% wish.itemDescription %>" } },
+                { "type": "column", "columnId": "hrWishCategory", "label": "<% presentationLabels.Category %>", "sortableAndFilterable": true, "cellTemplate": { "type": "text", "id": "hrWishCategoryCell", "value": "<% wish.category %>" } },
+                { "type": "column", "columnId": "hrWishBy", "label": "<% presentationLabels.Requester %>", "cellTemplate": { "type": "text", "id": "hrWishByCell", "value": "<% wish.requestedBy.descriptor %>" } },
+                { "type": "column", "columnId": "hrWishLocation", "label": "<% presentationLabels.Location %>", "sortableAndFilterable": true, "cellTemplate": { "type": "text", "id": "hrWishLocationCell", "value": "<% wish.location.descriptor %>" } },
+                { "type": "column", "columnId": "hrWishOn", "label": "<% presentationLabels.RequestedOn %>", "cellTemplate": { "type": "date", "id": "hrWishOnCell", "datePrecision": "DAY", "dateFormat": "yyyy-MM-dd", "value": "<% wish.requestedOn %>" } },
+                {
+                  "type": "column",
+                  "columnId": "hrWishAction",
+                  "cellTemplate": {
+                    "type": "button",
+                    "id": "hrWishAnswerButton",
+                    "action": "LINK",
+                    "label": "<% presentationLabels.Answer %>",
+                    "taskReference": { "taskId": "resolveNewItem", "parameterBindings": { "newItemId": "<% wish.id %>" } }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "id": "hrClosedSection",
+          "title": "<% presentationLabels.ClosedRequests %>",
+          "children": [
+            {
+              "type": "grid",
+              "gridType": "LIST",
+              "id": "hrClosedGrid",
+              "rows": "<% closedRequests() %>",
+              "rowVariableName": "closed",
+              "enabled": false,
+              "doNotAdd": true,
+              "doNotRemove": true,
+              "label": "<% presentationLabels.ClosedRequests %>",
+              "columns": [
+                {
+                  "type": "column",
+                  "columnId": "closedItem",
+                  "label": "<% presentationLabels.Item %>",
+                  "sortableAndFilterable": true,
+                  "cellTemplate": { "type": "text", "id": "closedItemCell", "value": "<% closed.item.descriptor %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "closedRequester",
+                  "label": "<% presentationLabels.Requester %>",
+                  "sortableAndFilterable": true,
+                  "cellTemplate": { "type": "text", "id": "closedRequesterCell", "value": "<% closed.requester.descriptor %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "closedStatus",
+                  "label": "<% presentationLabels.Status %>",
+                  "sortableAndFilterable": true,
+                  "cellTemplate": { "type": "text", "id": "closedStatusCell", "value": "<% closed.status %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "closedReturnedOn",
+                  "label": "<% presentationLabels.ReturnedOn %>",
+                  "cellTemplate": { "type": "date", "id": "closedReturnedOnCell", "datePrecision": "DAY", "dateFormat": "yyyy-MM-dd", "value": "<% closed.returnedOn %>" }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

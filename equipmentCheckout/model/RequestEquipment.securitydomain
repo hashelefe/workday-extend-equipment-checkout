@@ -1,0 +1,6 @@
+{
+  "id": 2,
+  "name": "RequestEquipment",
+  "label": "Self-Service: Equipment Checkout",
+  "enabledForPageSecurity": true
+}

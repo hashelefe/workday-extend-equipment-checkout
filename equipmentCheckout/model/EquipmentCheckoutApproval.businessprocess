@@ -1,0 +1,36 @@
+{
+  "id": 1,
+  "name": "EquipmentCheckoutApproval",
+  "label": "Equipment Checkout Approval",
+  "description": "Routes an equipment checkout request through manager approval, payroll partner approval, and employee acknowledgement.",
+  "targetBusinessObject": "CheckoutRequest",
+  "useForWorkflow": true,
+  "allowsCancel": true,
+  "allowsManualSendBack": true,
+  "approvalStep": {
+    "pageRoute": "/approve/{eventId}",
+    "actions": [
+      "APPROVE",
+      "DENY",
+      "SEND_BACK"
+    ]
+  },
+  "actionSteps": [
+    {
+      "id": 1,
+      "name": "EmployeeAcknowledgement",
+      "label": "Acknowledge Equipment Collection",
+      "description": "The borrower confirms they have received the equipment and accept responsibility for returning it by the due date.",
+      "pageRoute": "/acknowledge/{eventStepId}"
+    }
+  ],
+  "details": {
+    "pageRoute": "/details/{eventId}"
+  },
+  "revisePageRoute": "/revise/{eventStepId}",
+  "securityDomains": [
+    "ManageEquipment",
+    "RequestEquipment",
+    "ProcessEquipment"
+  ]
+}

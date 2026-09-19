@@ -1,0 +1,340 @@
+{
+  "id": "manage",
+  "securityDomains": [
+    "ManageEquipment"
+  ],
+  "script": "<%
+    const byStatus = function(wanted) {
+      if (empty(allRequests.data.allRequests.data)) { return []; }
+      return allRequests.data.allRequests.data.filter(request => {request.status == wanted});
+    };
+
+    /* An approved loan is overdue once its due date has passed and nothing came back. */
+    const isOverdue = function(request) {
+      if (empty(request.dueDate)) { return false; }
+      if (!empty(request.returnedOn)) { return false; }
+      return request.dueDate < date:getTodaysDate(date:getDateTimeZone(userTimeZone));
+    };
+
+    const catalogItems = function() {
+      return empty(allEquipment.data.allEquipment.data) ? [] : allEquipment.data.allEquipment.data;
+    };
+
+    const eligibilityText = function(item) {
+      const place = item.eligibleLocation ?? item.location;
+      const level = empty(item.eligibleFromLevel) ? presentationLabels.AllLevels : `{{presentationLabels.LevelPrefix}} {{item.eligibleFromLevel}} {{presentationLabels.AndAbove}}`;
+      return empty(place) ? level : `{{level}} - {{place.descriptor}}`;
+    };
+
+    const openNewItems = function() {
+      if (empty(newItems.data)) { return []; }
+      return newItems.data.filter(wish => {wish.status == 'OPEN'});
+    };
+  %>",
+  "endPoints": [
+    {
+      "name": "allRequests",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "graphQuery": { "queryId": "allRequests" },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    }
+,
+    {
+      "name": "allEquipment",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "graphQuery": { "queryId": "allEquipment" },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "newItems",
+      "baseUrlType": "app",
+      "url": "newItemRequests?limit=100",
+      "authType": "sso",
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    }
+  ],
+  "presentation": {
+    "title": {
+      "type": "title",
+      "label": "<% presentationLabels.ManageRequests %>"
+    },
+    "body": {
+      "type": "section",
+      "id": "manageBody",
+      "children": [
+        {
+          "type": "section",
+          "id": "pendingSection",
+          "title": "<% presentationLabels.AwaitingYourDecision %>",
+          "children": [
+            {
+              "type": "richText",
+              "id": "inboxNotice",
+              "enabled": false,
+              "value": "<% presentationLabels.InboxNotice %>"
+            },
+            {
+              "type": "grid",
+              "gridType": "LIST",
+              "id": "pendingQueue",
+              "rows": "<% byStatus('PENDING') %>",
+              "rowVariableName": "req",
+              "enabled": false,
+              "doNotAdd": true,
+              "doNotRemove": true,
+              "label": "<% presentationLabels.PendingRequests %>",
+              "emptyStateText": "<% presentationLabels.QueueIsClear %>",
+              "columns": [
+                {
+                  "type": "column",
+                  "columnId": "pendItem",
+                  "label": "<% presentationLabels.Item %>",
+                  "sortableAndFilterable": true,
+                  "cellTemplate": {
+                    "type": "text",
+                    "id": "pendItemCell",
+                    "value": "<% req.item.descriptor %>"
+                  }
+                },
+                {
+                  "type": "column",
+                  "columnId": "pendRequester",
+                  "label": "<% presentationLabels.Requester %>",
+                  "sortableAndFilterable": true,
+                  "cellTemplate": {
+                    "type": "text",
+                    "id": "pendRequesterCell",
+                    "value": "<% req.requester.descriptor %>"
+                  }
+                },
+                {
+                  "type": "column",
+                  "columnId": "pendRequestedOn",
+                  "label": "<% presentationLabels.RequestedOn %>",
+                  "sortableAndFilterable": true,
+                  "cellTemplate": {
+                    "type": "date",
+                    "id": "pendRequestedOnCell",
+                    "datePrecision": "DAY",
+                    "dateFormat": "yyyy-MM-dd",
+                    "value": "<% req.requestedOn %>"
+                  }
+                },
+                {
+                  "type": "column",
+                  "columnId": "pendDueDate",
+                  "label": "<% presentationLabels.DueDate %>",
+                  "cellTemplate": {
+                    "type": "date",
+                    "id": "pendDueDateCell",
+                    "datePrecision": "DAY",
+                    "dateFormat": "yyyy-MM-dd",
+                    "value": "<% req.dueDate %>"
+                  }
+                },
+                {
+                  "type": "column",
+                  "columnId": "pendPurpose",
+                  "label": "<% presentationLabels.Purpose %>",
+                  "cellTemplate": {
+                    "type": "text",
+                    "id": "pendPurposeCell",
+                    "value": "<% req.purpose %>"
+                  }
+                },
+                {
+                  "type": "column",
+                  "columnId": "pendPurposeSpacer",
+                  "label": "<% presentationLabels.Status %>",
+                  "cellTemplate": {
+                    "type": "text",
+                    "id": "pendStatusCell",
+                    "value": "<% req.status %>"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "id": "onLoanSection",
+          "title": "<% presentationLabels.CurrentlyOnLoan %>",
+          "children": [
+            {
+              "type": "grid",
+              "gridType": "LIST",
+              "id": "onLoan",
+              "rows": "<% byStatus('APPROVED') %>",
+              "rowVariableName": "loan",
+              "enabled": false,
+              "doNotAdd": true,
+              "doNotRemove": true,
+              "label": "<% presentationLabels.OutstandingLoans %>",
+              "emptyStateText": "<% presentationLabels.NothingOnLoan %>",
+              "columns": [
+                {
+                  "type": "column",
+                  "columnId": "loanItem",
+                  "label": "<% presentationLabels.Item %>",
+                  "sortableAndFilterable": true,
+                  "cellTemplate": {
+                    "type": "text",
+                    "id": "loanItemCell",
+                    "value": "<% loan.item.descriptor %>"
+                  }
+                },
+                {
+                  "type": "column",
+                  "columnId": "loanHolder",
+                  "label": "<% presentationLabels.Requester %>",
+                  "sortableAndFilterable": true,
+                  "cellTemplate": {
+                    "type": "text",
+                    "id": "loanHolderCell",
+                    "value": "<% loan.requester.descriptor %>"
+                  }
+                },
+                {
+                  "type": "column",
+                  "columnId": "loanDue",
+                  "label": "<% presentationLabels.DueDate %>",
+                  "sortableAndFilterable": true,
+                  "cellTemplate": {
+                    "type": "date",
+                    "id": "loanDueCell",
+                    "datePrecision": "DAY",
+                    "dateFormat": "yyyy-MM-dd",
+                    "value": "<% loan.dueDate %>"
+                  }
+                },
+                {
+                  "type": "column",
+                  "columnId": "loanOverdue",
+                  "label": "<% presentationLabels.Overdue %>",
+                  "cellTemplate": {
+                    "type": "text",
+                    "id": "loanOverdueCell",
+                    "value": "<% isOverdue(loan) ? presentationLabels.Yes : presentationLabels.No %>"
+                  }
+                },
+                {
+                  "type": "column",
+                  "columnId": "loanAction",
+                  "cellTemplate": {
+                    "type": "button",
+                    "id": "loanReturnButton",
+                    "action": "LINK",
+                    "label": "<% presentationLabels.RecordReturn %>",
+                    "taskReference": {
+                      "taskId": "returnItem",
+                      "parameterBindings": {
+                        "requestId": "<% loan.workdayID.id %>"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "id": "catalogSection",
+          "title": "<% presentationLabels.CatalogTitle %>",
+          "children": [
+            {
+              "type": "grid",
+              "gridType": "LIST",
+              "id": "catalogAdminGrid",
+              "rows": "<% catalogItems() %>",
+              "rowVariableName": "asset",
+              "enabled": false,
+              "doNotAdd": true,
+              "doNotRemove": true,
+              "label": "<% presentationLabels.CatalogTitle %>",
+              "columns": [
+                { "type": "column", "columnId": "assetTagCol", "label": "<% presentationLabels.AssetTag %>", "sortableAndFilterable": true, "cellTemplate": { "type": "text", "id": "assetTagCell", "value": "<% asset.assetTag %>" } },
+                { "type": "column", "columnId": "assetNameCol", "label": "<% presentationLabels.ItemName %>", "sortableAndFilterable": true, "cellTemplate": { "type": "text", "id": "assetNameCell", "value": "<% asset.itemName %>" } },
+                { "type": "column", "columnId": "assetCategoryCol", "label": "<% presentationLabels.Category %>", "sortableAndFilterable": true, "cellTemplate": { "type": "text", "id": "assetCategoryCell", "value": "<% asset.category %>" } },
+                { "type": "column", "columnId": "assetStatusCol", "label": "<% presentationLabels.Status %>", "sortableAndFilterable": true, "cellTemplate": { "type": "text", "id": "assetStatusCell", "value": "<% asset.status %>" } },
+                { "type": "column", "columnId": "assetEligibilityCol", "label": "<% presentationLabels.Eligibility %>", "cellTemplate": { "type": "text", "id": "assetEligibilityCell", "value": "<% eligibilityText(asset) %>" } },
+                {
+                  "type": "column",
+                  "columnId": "assetActionCol",
+                  "cellTemplate": {
+                    "type": "button",
+                    "id": "assetEditButton",
+                    "action": "LINK",
+                    "label": "<% presentationLabels.EditEligibility %>",
+                    "taskReference": { "taskId": "editItem", "parameterBindings": { "itemId": "<% asset.workdayID.id %>" } }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "id": "manageNewItemsSection",
+          "title": "<% presentationLabels.NewItemRequests %>",
+          "children": [
+            {
+              "type": "grid",
+              "gridType": "LIST",
+              "id": "manageNewItemsGrid",
+              "rows": "<% openNewItems() %>",
+              "rowVariableName": "wish",
+              "enabled": false,
+              "doNotAdd": true,
+              "doNotRemove": true,
+              "label": "<% presentationLabels.NewItemRequests %>",
+              "columns": [
+                { "type": "column", "columnId": "mgrWishItem", "label": "<% presentationLabels.ItemDescription %>", "cellTemplate": { "type": "text", "id": "mgrWishItemCell", "value": "<% wish.itemDescription %>" } },
+                { "type": "column", "columnId": "mgrWishCategory", "label": "<% presentationLabels.Category %>", "sortableAndFilterable": true, "cellTemplate": { "type": "text", "id": "mgrWishCategoryCell", "value": "<% wish.category %>" } },
+                { "type": "column", "columnId": "mgrWishBy", "label": "<% presentationLabels.Requester %>", "cellTemplate": { "type": "text", "id": "mgrWishByCell", "value": "<% wish.requestedBy.descriptor %>" } },
+                { "type": "column", "columnId": "mgrWishLocation", "label": "<% presentationLabels.Location %>", "sortableAndFilterable": true, "cellTemplate": { "type": "text", "id": "mgrWishLocationCell", "value": "<% wish.location.descriptor %>" } },
+                { "type": "column", "columnId": "mgrWishOn", "label": "<% presentationLabels.RequestedOn %>", "cellTemplate": { "type": "date", "id": "mgrWishOnCell", "datePrecision": "DAY", "dateFormat": "yyyy-MM-dd", "value": "<% wish.requestedOn %>" } },
+                {
+                  "type": "column",
+                  "columnId": "mgrWishAction",
+                  "cellTemplate": {
+                    "type": "button",
+                    "id": "mgrWishAnswerButton",
+                    "action": "LINK",
+                    "label": "<% presentationLabels.Answer %>",
+                    "taskReference": { "taskId": "resolveNewItem", "parameterBindings": { "newItemId": "<% wish.id %>" } }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "id": "adminActionsSection",
+          "children": [
+            {
+              "type": "button",
+              "id": "addItemButton",
+              "action": "LINK",
+              "label": "<% presentationLabels.AddCatalogItem %>",
+              "taskReference": { "taskId": "addItem" }
+            },
+            {
+              "type": "button",
+              "id": "importItemsButton",
+              "action": "LINK",
+              "label": "<% presentationLabels.ImportItems %>",
+              "taskReference": { "taskId": "importItems" }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

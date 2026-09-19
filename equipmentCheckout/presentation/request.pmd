@@ -1,0 +1,191 @@
+{
+  "id": "request",
+  "securityDomains": [
+    "RequestEquipment"
+  ],
+  "script": "<%
+    const validatePurpose = function(field) {
+      const maxPurposeLength = 250;
+      if (!empty(field.value) && field.value.length() > maxPurposeLength) {
+        field.setError(presentationLabels.PurposeTooLong);
+      } else {
+        field.clearError();
+      }
+    };
+
+    const deliveryOptions = function() {
+      return [
+        {'id': 'PICKUP', 'descriptor': presentationLabels.DeliveryPickup},
+        {'id': 'COURIER', 'descriptor': presentationLabels.DeliveryCourier}
+      ];
+    };
+
+    const isCourier = function() {
+      return !empty(deliveryMethod.value) && deliveryMethod.value[0] == 'COURIER';
+    };
+
+    /* A courier needs somewhere to deliver to; office pickup needs nothing extra. */
+    const validateDelivery = function() {
+      if (isCourier() && empty(deliveryAddress.value)) {
+        deliveryAddress.setError(presentationLabels.DeliveryAddressRequired);
+      } else {
+        deliveryAddress.clearError();
+      }
+    };
+
+    const validateDueDate = function(field) {
+      if (empty(field.value)) {
+        field.clearError();
+      } else if (field.value <= date:getTodaysDate(date:getDateTimeZone(userTimeZone))) {
+        field.setError(presentationLabels.DueDateMustBeFuture);
+      } else {
+        field.clearError();
+      }
+    };
+  %>",
+  "endPoints": [
+    {
+      "name": "me",
+      "baseUrlType": "workday-common",
+      "url": "workers/me",
+      "authType": "sso",
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "currentItem",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "exclude": "<% empty queryParams.itemId %>",
+      "graphQuery": {
+        "queryId": "currentItem",
+        "parameters": {
+          "itemId": "<% queryParams.itemId %>"
+        }
+      },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "checkoutRequest",
+        "baseUrlType": "app",
+        "url": "checkoutRequests",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "onSend": "<%
+          /* dueDate and purpose arrive through their widgets' valueOutBinding; without a
+             binding self.data does not exist. Everything the form cannot supply is attached here. */
+          self.data.put('item', {'id': queryParams.itemId});
+          self.data.put('requester', {'id': me.id});
+          self.data.status = 'PENDING';
+          self.data.deliveryMethod = deliveryMethod.value[0];
+          self.data.requestedOn = date:getTodaysDate(date:getDateTimeZone(userTimeZone));
+          return self.data;
+        %>",
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      },
+      {
+        "name": "checkoutRequestEvents",
+        "baseUrlType": "app",
+        "url": "equipmentCheckoutApprovalEvents",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "values": [
+          {
+            "outboundPath": "businessProcessTarget.id",
+            "value": "<% checkoutRequest.id %>"
+          }
+        ],
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      }
+    ],
+    "responseErrorDetail": {
+      "errorSummary": "<% error %>",
+      "errors": "<% list:mapAttribute(errors, 'error') %>"
+    }
+  },
+  "presentation": {
+    "pageType": "edit",
+    "title": {
+      "type": "title",
+      "label": "<% presentationLabels.RequestEquipment %>"
+    },
+    "body": {
+      "type": "section",
+      "id": "requestBody",
+      "children": [
+        {
+          "type": "section",
+          "id": "borrowingSection",
+          "title": "<% presentationLabels.WhatYouAreBorrowing %>",
+          "children": [
+            {
+              "type": "richText",
+              "id": "itemSummary",
+              "enabled": false,
+              "label": "<% currentItem.data.currentItem.data[0].displayLabel %>",
+              "value": "<% presentationLabels.CategoryPrefix + currentItem.data.currentItem.data[0].category + presentationLabels.LocationPrefix + currentItem.data.currentItem.data[0].location.descriptor %>",
+              "render": "<% !empty(currentItem) %>"
+            },
+            {
+              "type": "richText",
+              "id": "noItemChosen",
+              "enabled": false,
+              "value": "<% presentationLabels.NoItemChosen %>",
+              "render": "<% empty(queryParams.itemId) %>"
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "id": "requestDetailsSection",
+          "title": "<% presentationLabels.RequestDetails %>",
+          "render": "<% !empty(queryParams.itemId) %>",
+          "children": [
+            {
+              "type": "richText",
+              "id": "approvalRouteNotice",
+              "enabled": false,
+              "value": "<% presentationLabels.ApprovalRouteNotice %>"
+            },
+            {
+              "type": "date",
+              "id": "dueDate",
+              "label": "<% presentationLabels.DueDate %>",
+              "datePrecision": "DAY",
+              "required": true,
+              "valueOutBinding": "checkoutRequest.dueDate",
+              "onChange": "<% validateDueDate(self) %>"
+            },
+            {
+              "type": "textArea",
+              "id": "purpose",
+              "label": "<% presentationLabels.Purpose %>",
+              "required": true,
+              "valueOutBinding": "checkoutRequest.purpose",
+              "onChange": "<% validatePurpose(self) %>"
+            },
+            {
+              "type": "dropdown",
+              "id": "deliveryMethod",
+              "label": "<% presentationLabels.DeliveryMethod %>",
+              "required": true,
+              "values": "<% deliveryOptions() %>",
+              "onChange": "<% validateDelivery() %>"
+            },
+            {
+              "type": "textArea",
+              "id": "deliveryAddress",
+              "label": "<% presentationLabels.DeliveryAddress %>",
+              "helpText": "<% presentationLabels.DeliveryAddressHelp %>",
+              "valueOutBinding": "checkoutRequest.deliveryAddress",
+              "onChange": "<% validateDelivery() %>"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

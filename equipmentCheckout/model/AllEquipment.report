@@ -1,0 +1,26 @@
+{
+  "id": 1,
+  "name": "AllEquipment",
+  "businessObject": "EquipmentItem",
+  "defaultSecurityDomains": [
+    "ManageEquipment"
+  ],
+  "sortConfigs": [
+    {
+      "id": 1,
+      "order": "a",
+      "field": "assetTag",
+      "direction": "ASCENDING"
+    }
+  ],
+  "columns": [
+    { "id": 1, "field": "assetTag", "name": "Asset Tag", "order": "a" },
+    { "id": 2, "field": "itemName", "name": "Item Name", "order": "b" },
+    { "id": 3, "field": "category", "name": "Category", "order": "c" },
+    { "id": 4, "field": "serialNumber", "name": "Serial Number", "order": "d" },
+    { "id": 5, "field": "status", "name": "Status", "order": "e" },
+    { "id": 6, "field": "location", "name": "Location", "order": "f" },
+    { "id": 7, "field": "currentHolder", "name": "Current Holder", "order": "g" },
+    { "id": 8, "field": "notes", "name": "Notes", "order": "h" }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "id": "importItems",
+  "securityDomains": [
+    "ManageEquipment"
+  ],
+  "script": "<%
+    const locationId = function() {
+      return me.data.worker.data[0].primaryJob.location.workdayID.id;
+    };
+
+    /* The orchestration returns every parsed row (items) and the bulk API's per-record
+       results (pages of {data: [{status, body}]}), both in CSV order. Pair them up and keep
+       only the failures, numbered as the spreadsheet row the admin will look for. */
+    const importOutcome = function() {
+      const createdStatus = 201;
+      const firstDataRow = 2;
+      const items = importItems.items ?? [];
+      const results = [];
+      (importItems.pages ?? []).forEach(page => { page.data.forEach(result => { results.add(result) }) });
+
+      const failures = [];
+      let rowIndex = 0;
+      for (let result : results) {
+        if (result.status != createdStatus) {
+          failures.add({
+            'row': rowIndex + firstDataRow,
+            'assetTag': items[rowIndex].assetTag,
+            'error': result.body.error
+          });
+        }
+        rowIndex += 1;
+      }
+      return {'created': results.size() - failures.size(), 'failed': failures};
+    };
+  %>",
+  "endPoints": [
+    {
+      "name": "me",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "graphQuery": { "queryId": "me" },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "importItems",
+        "baseUrlType": "orchestration",
+        "url": "importEquipmentItems/launch",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "multiPartFileLast": true,
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      },
+      {
+        "type": "outboundVariable",
+        "name": "importOutcomeVariable",
+        "variableScope": "flow",
+        "values": [
+          {
+            "outboundPath": "outcome",
+            "value": "<% importOutcome() %>"
+          }
+        ]
+      }
+    ],
+    "responseErrorDetail": {
+      "errorSummary": "<% error %>",
+      "errors": "<% list:mapAttribute(errors, 'error') %>"
+    }
+  },
+  "presentation": {
+    "pageType": "edit",
+    "title": {
+      "type": "title",
+      "label": "<% presentationLabels.ImportItems %>"
+    },
+    "body": {
+      "type": "section",
+      "id": "importBody",
+      "children": [
+        {
+          "type": "richText",
+          "id": "importIntro",
+          "enabled": false,
+          "value": "<% presentationLabels.ImportIntro %>"
+        },
+        {
+          "type": "fileUploader",
+          "id": "csvFile",
+          "label": "<% presentationLabels.CsvFile %>",
+          "fileTypes": "csv",
+          "singular": true,
+          "required": true,
+          "valueOutBinding": "importItems:filedata:"
+        },
+        {
+          "type": "hidden",
+          "id": "importLocation",
+          "value": "<% locationId() %>",
+          "valueOutBinding": "importItems::data:locationId"
+        }
+      ]
+    }
+  }
+}

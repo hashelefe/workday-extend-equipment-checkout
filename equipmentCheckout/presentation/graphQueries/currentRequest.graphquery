@@ -1,0 +1,8 @@
+{
+  "id": "currentRequest",
+  "parameters": ["requestId"],
+  "query": "query currentRequest($requestId: ID!) { currentRequest: equipmentcheckout_kmccyv_CheckoutRequest(dataSource: {equipmentcheckout_kmccyv_checkoutRequests: {}} where: {workdayID: {in: [{id: $requestId}]}}) { data { workdayID { id } descriptor status requestedOn dueDate returnedOn purpose decisionNote deliveryMethod deliveryAddress courierName trackingNumber shippedOn trackingNotes item { workdayID { id } descriptor } requester { workdayID { id } descriptor } approver { workdayID { id } descriptor } } } }",
+  "variables": {
+    "requestId": "<% requestId %>"
+  }
+}

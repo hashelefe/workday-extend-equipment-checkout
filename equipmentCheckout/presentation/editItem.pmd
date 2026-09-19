@@ -1,0 +1,154 @@
+{
+  "id": "editItem",
+  "securityDomains": [
+    "ManageEquipment"
+  ],
+  "script": "<%
+    const theItem = function() {
+      return empty(currentItem) ? null : currentItem.data.currentItem.data[0];
+    };
+
+    /* Lower numbers are more senior: 'Level 5 and above' means levels 1 to 5. */
+    const levelOptions = function() {
+      const levels = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
+      const options = [{'id': 'ALL', 'descriptor': presentationLabels.AllLevels}];
+      levels.forEach(level => { options.add({'id': level, 'descriptor': `{{presentationLabels.LevelPrefix}} {{level}} {{presentationLabels.AndAbove}}`}) });
+      return options;
+    };
+
+    const chosenLevel = function() {
+      return eligibleLevel.value[0] == 'ALL' ? null : number:convertStringToInt(eligibleLevel.value[0]);
+    };
+
+    const locationOptions = function() {
+      if (empty(locations.data)) { return []; }
+      return locations.data.map(place => {{'id': place.workdayID, 'descriptor': place.locationName}});
+    };
+
+    const currentEligibility = function() {
+      if (empty(theItem())) { return ''; }
+      const place = theItem().eligibleLocation ?? theItem().location;
+      const level = empty(theItem().eligibleFromLevel) ? presentationLabels.AllLevels : `{{presentationLabels.LevelPrefix}} {{theItem().eligibleFromLevel}} {{presentationLabels.AndAbove}}`;
+      return `{{level}} - {{place.descriptor}}`;
+    };
+  %>",
+  "endPoints": [
+    {
+      "name": "currentItem",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "exclude": "<% empty queryParams.itemId %>",
+      "graphQuery": {
+        "queryId": "currentItem",
+        "parameters": {
+          "itemId": "<% queryParams.itemId %>"
+        }
+      },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "locations",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "wqlQuery": { "queryId": "locations" },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "saveEligibility",
+        "baseUrlType": "workday-graph",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "graphQuery": {
+          "queryId": "updateItem",
+          "variables": {
+            "updateItem_input": {
+              "eligibleFromLevel": "<% chosenLevel() %>",
+              "eligibleLocation": {
+                "id": {
+                  "id": "<% eligibleLocation.value[0] %>",
+                  "type": "WID"
+                }
+              }
+            },
+            "updateItem_itemId": {
+              "id": "<% queryParams.itemId %>",
+              "type": "WID"
+            }
+          }
+        },
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      }
+    ],
+    "responseErrorDetail": {
+      "errorSummary": "<% error %>",
+      "errors": "<% list:mapAttribute(errors, 'error') %>"
+    }
+  },
+  "presentation": {
+    "pageType": "edit",
+    "title": {
+      "type": "title",
+      "label": "<% presentationLabels.EditEligibilityTitle %>"
+    },
+    "body": {
+      "type": "section",
+      "id": "editItemBody",
+      "children": [
+        {
+          "type": "section",
+          "id": "editItemSection",
+          "title": "<% presentationLabels.ItemDetails %>",
+          "render": "<% !empty(theItem()) %>",
+          "children": [
+            {
+              "type": "text",
+              "id": "editItemName",
+              "label": "<% presentationLabels.Item %>",
+              "enabled": false,
+              "value": "<% theItem().displayLabel %>"
+            },
+            {
+              "type": "text",
+              "id": "editItemCurrent",
+              "label": "<% presentationLabels.CurrentEligibility %>",
+              "enabled": false,
+              "value": "<% currentEligibility() %>"
+            },
+            {
+              "type": "richText",
+              "id": "editItemGuidance",
+              "enabled": false,
+              "value": "<% presentationLabels.EligibilityGuidance %>"
+            },
+            {
+              "type": "dropdown",
+              "id": "eligibleLevel",
+              "label": "<% presentationLabels.Eligibility %>",
+              "required": true,
+              "values": "<% levelOptions() %>"
+            },
+            {
+              "type": "dropdown",
+              "id": "eligibleLocation",
+              "label": "<% presentationLabels.EligibleLocation %>",
+              "required": true,
+              "values": "<% locationOptions() %>"
+            }
+          ]
+        },
+        {
+          "type": "richText",
+          "id": "editItemNotFound",
+          "enabled": false,
+          "value": "<% presentationLabels.NoItemChosen %>",
+          "render": "<% empty(theItem()) %>"
+        }
+      ]
+    }
+  }
+}

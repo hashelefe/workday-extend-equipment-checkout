@@ -1,0 +1,10 @@
+{
+  "id": "returnEvents",
+  "_comment": "Every return handoff event with its BP status, joined to EquipmentReturn rows in page script on businessProcessTarget.",
+  "parameters": ["applicationId"],
+  "query": "
+    SELECT workdayID, businessProcessTarget, status
+    FROM <% applicationId + '_equipmentReturnHandoffEvents' %>
+  ",
+  "limit": "100"
+}

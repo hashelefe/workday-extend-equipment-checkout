@@ -1,0 +1,78 @@
+{
+  "id": 4,
+  "name": "NewItemRequest",
+  "label": "New Item Request",
+  "defaultSecurityDomains": [
+    "ManageEquipment",
+    "ProcessEquipment",
+    "RequestEquipment"
+  ],
+  "defaultCollection": {
+    "name": "newItemRequests",
+    "label": "New Item Requests",
+    "description": "Requests from employees to add equipment the catalog has none of at their location"
+  },
+  "fields": [
+    {
+      "id": 1,
+      "name": "itemDescription",
+      "label": "Item Description",
+      "type": "TEXT",
+      "useForDisplay": true,
+      "description": "What the employee needs, e.g. 27 inch 4K monitor"
+    },
+    {
+      "id": 2,
+      "name": "category",
+      "label": "Category",
+      "type": "TEXT",
+      "description": "Catalog category the item belongs in"
+    },
+    {
+      "id": 3,
+      "name": "justification",
+      "label": "Justification",
+      "type": "TEXT",
+      "description": "Why the employee needs it"
+    },
+    {
+      "id": 4,
+      "name": "requestedBy",
+      "label": "Requested By",
+      "type": "SINGLE_INSTANCE",
+      "target": "WORKER",
+      "secureByTarget": true,
+      "description": "Employee asking for the item. secureByTarget keeps self-service users scoped to their own requests"
+    },
+    {
+      "id": 5,
+      "name": "location",
+      "label": "Location",
+      "type": "SINGLE_INSTANCE",
+      "target": "LOCATION",
+      "description": "The employee's primary work location, where the item is needed"
+    },
+    {
+      "id": 6,
+      "name": "requestedOn",
+      "label": "Requested On",
+      "type": "DATE",
+      "precision": "DAY",
+      "description": "Date the request was made"
+    },
+    {
+      "id": 7,
+      "name": "status",
+      "label": "Status",
+      "type": "TEXT",
+      "description": "OPEN, ADDED or DECLINED"
+    },
+    {
+      "id": 8,
+      "name": "responseNote",
+      "label": "Response",
+      "type": "TEXT",
+      "description": "The equipment team's answer to the employee"
+    }
+  ]
+}

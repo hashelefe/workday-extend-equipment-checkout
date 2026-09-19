@@ -1,0 +1,24 @@
+# Workday Developer CLI local state
+.wdcli/
+*.wdcli
+.env
+.env.*
+
+# Local build / download output from wdcli app download
+downloads/
+*.zip
+
+# Editor / OS noise
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+*.swp
+
+# Python cache from the validation script
+__pycache__/
+*.pyc
+
+# Private working notes and tenant-specific App Hub manifest (see appManifest.example.json)
+HANDOFF.md
+equipmentCheckout/appManifest.json

@@ -1,0 +1,5 @@
+{
+  "id": "createItem",
+  "_comment": "Adds a new asset to the catalog. Admin only.",
+  "query": "mutation equipmentcheckout_kmccyv_createEquipmentItem($createItem_input: Equipmentcheckout_kmccyv_EquipmentItemsSummary_CreateInput!) { equipmentcheckout_kmccyv_createEquipmentItem(input: $createItem_input) { workdayID { id } descriptor assetTag itemName category serialNumber status notes displayLabel location { workdayID { id } descriptor } } }"
+}

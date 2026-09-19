@@ -1,0 +1,185 @@
+{
+  "id": "home",
+  "securityDomains": [
+    "RequestEquipment"
+  ],
+  "script": "<%
+    /* The GraphQL criteria shape for plain TEXT fields is not covered by any Workday sample,
+       so status narrowing happens here instead of in the query. See README, 'Filtering choices'. */
+    const byStatus = function(rows, wanted) {
+      if (empty(rows)) { return []; }
+      return rows.filter(row => {row.status == wanted});
+    };
+
+    const myRows = function() {
+      return empty(myRequests.data.myRequests.data) ? [] : myRequests.data.myRequests.data;
+    };
+  %>",
+  "endPoints": [
+    {
+      "name": "me",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "graphQuery": { "queryId": "me" },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "myRequests",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "graphQuery": {
+        "queryId": "myRequests",
+        "parameters": {
+          "requesterId": "<% me.data.worker.data[0].workdayID.id %>"
+        }
+      },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    }
+  ],
+  "presentation": {
+    "title": {
+      "type": "title",
+      "label": "<% presentationLabels.AppTitle %>"
+    },
+    "body": {
+      "type": "section",
+      "id": "homeBody",
+      "children": [
+        {
+          "type": "section",
+          "id": "homeColumns",
+          "horizontal": true,
+          "columnWidthRatios": [ 0.7, 0.3 ],
+          "children": [
+            {
+              "type": "section",
+              "id": "homeLoansSection",
+              "title": "<% presentationLabels.OnLoanToYou %>",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "homeIntro",
+                  "enabled": false,
+                  "value": "<% presentationLabels.HomeIntro %>"
+                },
+                {
+                  "type": "grid",
+                  "gridType": "LIST",
+                  "id": "activeLoans",
+                  "rows": "<% byStatus(myRows(), 'APPROVED') %>",
+                  "rowVariableName": "loan",
+                  "enabled": false,
+                  "doNotAdd": true,
+                  "doNotRemove": true,
+                  "label": "<% presentationLabels.ActiveLoans %>",
+                  "emptyStateText": "<% presentationLabels.NoActiveLoans %>",
+                  "columns": [
+                    {
+                      "type": "column",
+                      "columnId": "loanItem",
+                      "label": "<% presentationLabels.Item %>",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "loanItemCell",
+                        "value": "<% loan.item.descriptor %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "loanDue",
+                      "label": "<% presentationLabels.DueDate %>",
+                      "sortableAndFilterable": true,
+                      "cellTemplate": {
+                        "type": "date",
+                        "id": "loanDueCell",
+                        "datePrecision": "DAY",
+                        "dateFormat": "yyyy-MM-dd",
+                        "value": "<% loan.dueDate %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "loanPurpose",
+                      "label": "<% presentationLabels.Purpose %>",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "loanPurposeCell",
+                        "value": "<% loan.purpose %>"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "grid",
+                  "gridType": "LIST",
+                  "id": "pendingForMe",
+                  "rows": "<% byStatus(myRows(), 'PENDING') %>",
+                  "rowVariableName": "pending",
+                  "enabled": false,
+                  "doNotAdd": true,
+                  "doNotRemove": true,
+                  "label": "<% presentationLabels.AwaitingApproval %>",
+                  "emptyStateText": "<% presentationLabels.NothingPending %>",
+                  "columns": [
+                    {
+                      "type": "column",
+                      "columnId": "pendingItem",
+                      "label": "<% presentationLabels.Item %>",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "pendingItemCell",
+                        "value": "<% pending.item.descriptor %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "pendingRequested",
+                      "label": "<% presentationLabels.RequestedOn %>",
+                      "cellTemplate": {
+                        "type": "date",
+                        "id": "pendingRequestedCell",
+                        "datePrecision": "DAY",
+                        "dateFormat": "yyyy-MM-dd",
+                        "value": "<% pending.requestedOn %>"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "section",
+              "id": "homeCardsSection",
+              "children": [
+                {
+                  "type": "cardContainer",
+                  "layout": "MASONRY",
+                  "cards": [
+                    {
+                      "type": "card",
+                      "cardId": "AppLinks",
+                      "parameters": "<% {'title': presentationLabels.KeyTasks, 'Browse': presentationLabels.BrowseCatalog, 'MyRequests': presentationLabels.MyRequests, 'Manage': presentationLabels.ManageRequests, 'HrRequests': presentationLabels.HrRequestsTitle} %>"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "richText",
+          "id": "homeFooterText",
+          "enabled": false,
+          "value": "<% presentationLabels.PoweredBy %>"
+        }
+      ]
+    }
+  }
+}

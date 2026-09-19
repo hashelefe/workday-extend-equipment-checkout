@@ -1,0 +1,137 @@
+{
+  "id": "returnItem",
+  "securityDomains": [
+    "ManageEquipment"
+  ],
+  "script": "<%
+    const theRequest = function() {
+      return empty(currentRequest) ? null : currentRequest.data.currentRequest.data[0];
+    };
+  %>",
+  "endPoints": [
+    {
+      "name": "currentRequest",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "exclude": "<% empty queryParams.requestId %>",
+      "graphQuery": {
+        "queryId": "currentRequest",
+        "parameters": {
+          "requestId": "<% queryParams.requestId %>"
+        }
+      },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "closeRequest",
+        "baseUrlType": "workday-graph",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "graphQuery": {
+          "queryId": "updateRequest",
+          "variables": {
+            "updateRequest_input": {
+              "status": "<% 'RETURNED' %>",
+              "returnedOn": "<% date:getTodaysDate(date:getDateTimeZone(userTimeZone)) %>",
+              "decisionNote": "<% returnNote.value %>"
+            },
+            "updateRequest_requestId": {
+              "id": "<% queryParams.requestId %>",
+              "type": "WID"
+            }
+          }
+        },
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      },
+      {
+        "name": "releaseItem",
+        "baseUrlType": "workday-graph",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "graphQuery": {
+          "queryId": "updateItem",
+          "variables": {
+            "updateItem_input": {
+              "status": "<% 'AVAILABLE' %>",
+              "currentHolder": null
+            },
+            "updateItem_itemId": {
+              "id": "<% theRequest().item.workdayID.id %>",
+              "type": "WID"
+            }
+          }
+        },
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      }
+    ],
+    "responseErrorDetail": {
+      "errorSummary": "<% error %>",
+      "errors": "<% list:mapAttribute(errors, 'error') %>"
+    }
+  },
+  "presentation": {
+    "pageType": "edit",
+    "title": {
+      "type": "title",
+      "label": "<% presentationLabels.RecordReturn %>"
+    },
+    "body": {
+      "type": "section",
+      "id": "returnBody",
+      "children": [
+        {
+          "type": "section",
+          "id": "returnSection",
+          "title": "<% presentationLabels.RequestSummary %>",
+          "render": "<% !empty(currentRequest) %>",
+          "children": [
+            {
+              "type": "richText",
+              "id": "returnGuidance",
+              "enabled": false,
+              "value": "<% presentationLabels.ReturnGuidance %>"
+            },
+            {
+              "type": "text",
+              "id": "returnItemName",
+              "label": "<% presentationLabels.Item %>",
+              "enabled": false,
+              "value": "<% theRequest().item.descriptor %>"
+            },
+            {
+              "type": "text",
+              "id": "returnRequester",
+              "label": "<% presentationLabels.Requester %>",
+              "enabled": false,
+              "value": "<% theRequest().requester.descriptor %>"
+            },
+            {
+              "type": "date",
+              "id": "returnDueDate",
+              "label": "<% presentationLabels.DueDate %>",
+              "datePrecision": "DAY",
+              "enabled": false,
+              "value": "<% theRequest().dueDate %>"
+            },
+            {
+              "type": "textArea",
+              "id": "returnNote",
+              "label": "<% presentationLabels.ReturnCondition %>"
+            }
+          ]
+        },
+        {
+          "type": "richText",
+          "id": "returnNotFound",
+          "enabled": false,
+          "value": "<% presentationLabels.NoRequestSelected %>",
+          "render": "<% empty(queryParams.requestId) %>"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "id": 3,
+  "name": "EquipmentReturn",
+  "label": "Equipment Return",
+  "defaultSecurityDomains": [
+    "ProcessEquipment",
+    "ManageEquipment",
+    "RequestEquipment"
+  ],
+  "defaultCollection": {
+    "name": "equipmentReturns",
+    "label": "Equipment Returns",
+    "description": "Every handoff of borrowed equipment back to the pool, from the employee starting it to the item being inspected and resolved"
+  },
+  "fields": [
+    {
+      "id": 1,
+      "name": "item",
+      "label": "Equipment Item",
+      "type": "SINGLE_INSTANCE",
+      "target": "EquipmentItem",
+      "useForDisplay": true,
+      "description": "The item being handed back"
+    },
+    {
+      "id": 2,
+      "name": "checkoutRequest",
+      "label": "Checkout Request",
+      "type": "SINGLE_INSTANCE",
+      "target": "CheckoutRequest",
+      "description": "The loan this return closes"
+    },
+    {
+      "id": 3,
+      "name": "returnedBy",
+      "label": "Returned By",
+      "type": "SINGLE_INSTANCE",
+      "target": "WORKER",
+      "secureByTarget": true,
+      "description": "Worker who held the item. secureByTarget keeps self-service users scoped to their own returns"
+    },
+    {
+      "id": 4,
+      "name": "initiatedOn",
+      "label": "Initiated On",
+      "type": "DATE",
+      "precision": "DAY",
+      "description": "Date the return was started"
+    },
+    {
+      "id": 5,
+      "name": "employeeNote",
+      "label": "Employee Note",
+      "type": "TEXT",
+      "description": "Anything the employee wants the HR partner to know before the handoff"
+    },
+    {
+      "id": 6,
+      "name": "status",
+      "label": "Status",
+      "type": "TEXT",
+      "description": "SUBMITTED, AWAITING_MANAGER or COMPLETED"
+    },
+    {
+      "id": 7,
+      "name": "itemCondition",
+      "label": "Item Condition",
+      "type": "TEXT",
+      "description": "GOOD, WORN, DAMAGED or INCOMPLETE, recorded by the HR partner at handoff"
+    },
+    {
+      "id": 8,
+      "name": "conditionNotes",
+      "label": "Condition Notes",
+      "type": "TEXT",
+      "description": "What the HR partner found when inspecting the item"
+    },
+    {
+      "id": 9,
+      "name": "inspectedBy",
+      "label": "Inspected By",
+      "type": "SINGLE_INSTANCE",
+      "target": "WORKER",
+      "secureByTarget": false,
+      "description": "HR partner who took the item back"
+    },
+    {
+      "id": 10,
+      "name": "inspectedOn",
+      "label": "Inspected On",
+      "type": "DATE",
+      "precision": "DAY",
+      "description": "Date of the handoff"
+    },
+    {
+      "id": 11,
+      "name": "requiresManagerAction",
+      "label": "Requires Manager Action",
+      "type": "BOOLEAN",
+      "description": "True when the item came back damaged or incomplete. The tenant BP definition uses this as the condition on the manager step"
+    },
+    {
+      "id": 12,
+      "name": "managerAction",
+      "label": "Manager Action",
+      "type": "TEXT",
+      "description": "RETURN_TO_STOCK, SEND_FOR_REPAIR or WRITE_OFF, chosen by the manager when the item has a problem"
+    },
+    {
+      "id": 13,
+      "name": "managerNote",
+      "label": "Manager Note",
+      "type": "TEXT",
+      "description": "The manager's reasoning or follow-up"
+    },
+    {
+      "id": 14,
+      "name": "resolvedBy",
+      "label": "Resolved By",
+      "type": "SINGLE_INSTANCE",
+      "target": "WORKER",
+      "secureByTarget": false,
+      "description": "Manager who decided what happens to a problem item"
+    },
+    {
+      "id": 15,
+      "name": "resolvedOn",
+      "label": "Resolved On",
+      "type": "DATE",
+      "precision": "DAY",
+      "description": "Date the manager resolved the issue"
+    }
+  ]
+}

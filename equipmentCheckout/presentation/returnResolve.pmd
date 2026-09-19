@@ -1,0 +1,212 @@
+{
+  "id": "returnResolve",
+  "securityDomains": [
+    "ProcessEquipment"
+  ],
+  "script": "<%
+    const actionOptions = function() {
+      return [
+        {'id': 'RETURN_TO_STOCK', 'descriptor': presentationLabels.ActionReturnToStock},
+        {'id': 'SEND_FOR_REPAIR', 'descriptor': presentationLabels.ActionSendForRepair},
+        {'id': 'WRITE_OFF', 'descriptor': presentationLabels.ActionWriteOff}
+      ];
+    };
+
+    /* If the tenant routes this step unconditionally, a good item still lands here - the page then only closes the step. */
+    const needsAction = function() {
+      return !empty(theReturn) && theReturn.requiresManagerAction;
+    };
+
+    const itemStatusFor = function(action) {
+      if (action == 'RETURN_TO_STOCK') { return 'AVAILABLE'; }
+      if (action == 'WRITE_OFF') { return 'RETIRED'; }
+      return 'MAINTENANCE';
+    };
+  %>",
+  "endPoints": [
+    {
+      "name": "bpEventStep",
+      "baseUrlType": "workday-bp",
+      "url": "<% `eventSteps/{{queryParams.eventStepId}}` %>",
+      "authType": "sso",
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "eventInfo",
+      "baseUrlType": "workday-bp",
+      "url": "<% `events/{{bpEventStep.event.id}}` %>",
+      "authType": "sso",
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "theReturn",
+      "baseUrlType": "app",
+      "url": "<% `equipmentReturns/{{eventInfo.for.id}}` %>",
+      "authType": "sso",
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "me",
+      "baseUrlType": "workday-common",
+      "url": "workers/me",
+      "authType": "sso",
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "recordResolution",
+        "baseUrlType": "app",
+        "url": "<% `equipmentReturns/{{theReturn.id}}` %>",
+        "httpMethod": "PATCH",
+        "authType": "sso",
+        "exclude": "<% !needsAction() %>",
+        "onSend": "<%
+          return {
+            'managerAction': managerAction.value[0],
+            'managerNote': managerNote.value,
+            'resolvedBy': {'id': me.id},
+            'resolvedOn': date:getTodaysDate(date:getDateTimeZone(userTimeZone)),
+            'status': 'COMPLETED'
+          };
+        %>",
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      },
+      {
+        "name": "applyItemStatus",
+        "baseUrlType": "workday-graph",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "exclude": "<% !needsAction() %>",
+        "graphQuery": {
+          "queryId": "updateItem",
+          "variables": {
+            "updateItem_input": {
+              "status": "<% itemStatusFor(managerAction.value[0]) %>"
+            },
+            "updateItem_itemId": {
+              "id": "<% theReturn.item.id %>",
+              "type": "WID"
+            }
+          }
+        },
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      },
+      {
+        "name": "submitStep",
+        "baseUrlType": "workday-bp",
+        "url": "<% `eventSteps/{{queryParams.eventStepId}}/submit` %>",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "values": [
+          {
+            "outboundPath": "stepAction.id",
+            "value": "<% /* Workday's delivered 'Submit' step action. Without this call the step never completes. */ 'd9e4223e446c11de98360015c5e6daf6' %>"
+          }
+        ],
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      }
+    ],
+    "responseErrorDetail": {
+      "errorSummary": "<% error %>",
+      "errors": "<% list:mapAttribute(errors, 'error') %>"
+    }
+  },
+  "presentation": {
+    "pageType": "edit",
+    "title": {
+      "type": "title",
+      "label": "<% presentationLabels.ResolveTitle %>"
+    },
+    "body": {
+      "type": "section",
+      "id": "resolveBody",
+      "children": [
+        {
+          "type": "section",
+          "id": "resolveFindingsSection",
+          "title": "<% presentationLabels.InspectionTitle %>",
+          "children": [
+            {
+              "type": "text",
+              "id": "resolveItem",
+              "label": "<% presentationLabels.Item %>",
+              "enabled": false,
+              "value": "<% theReturn.item.descriptor %>"
+            },
+            {
+              "type": "text",
+              "id": "resolveReturnedBy",
+              "label": "<% presentationLabels.ReturnedBy %>",
+              "enabled": false,
+              "value": "<% theReturn.returnedBy.descriptor %>"
+            },
+            {
+              "type": "text",
+              "id": "resolveCondition",
+              "label": "<% presentationLabels.ItemCondition %>",
+              "enabled": false,
+              "value": "<% theReturn.itemCondition %>"
+            },
+            {
+              "type": "textArea",
+              "id": "resolveConditionNotes",
+              "label": "<% presentationLabels.ConditionNotes %>",
+              "enabled": false,
+              "value": "<% theReturn.conditionNotes %>"
+            },
+            {
+              "type": "text",
+              "id": "resolveInspectedBy",
+              "label": "<% presentationLabels.InspectedBy %>",
+              "enabled": false,
+              "value": "<% theReturn.inspectedBy.descriptor %>"
+            },
+            {
+              "type": "textArea",
+              "id": "resolveEmployeeNote",
+              "label": "<% presentationLabels.EmployeeNote %>",
+              "enabled": false,
+              "value": "<% theReturn.employeeNote %>"
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "id": "resolveDecisionSection",
+          "title": "<% presentationLabels.YourDecision %>",
+          "render": "<% needsAction() %>",
+          "children": [
+            {
+              "type": "richText",
+              "id": "resolveGuidance",
+              "enabled": false,
+              "value": "<% presentationLabels.ResolveGuidance %>"
+            },
+            {
+              "type": "dropdown",
+              "id": "managerAction",
+              "label": "<% presentationLabels.ManagerAction %>",
+              "required": true,
+              "values": "<% actionOptions() %>"
+            },
+            {
+              "type": "textArea",
+              "id": "managerNote",
+              "label": "<% presentationLabels.ManagerNote %>",
+              "required": true
+            }
+          ]
+        },
+        {
+          "type": "richText",
+          "id": "resolveNothingToDo",
+          "enabled": false,
+          "value": "<% presentationLabels.ResolveNothingToDo %>",
+          "render": "<% !needsAction() %>"
+        }
+      ]
+    }
+  }
+}

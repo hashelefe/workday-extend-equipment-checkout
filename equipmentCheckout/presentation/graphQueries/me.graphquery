@@ -1,0 +1,5 @@
+{
+  "id": "me",
+  "_comment": "Current signed-in worker. processingWorker resolves to whoever is running the app.",
+  "query": "query { worker(dataSource: {processingWorker: {}}) { data { workdayID { id } descriptor primaryJob { location { workdayID { id } descriptor } } } } }"
+}

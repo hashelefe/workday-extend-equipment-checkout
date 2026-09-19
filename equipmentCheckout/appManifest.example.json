@@ -1,0 +1,8 @@
+{
+  "id": "<app id from wdcli app create>",
+  "referenceId": "<reference id, e.g. equipmentcheckout_xxxxxx>",
+  "name": "Equipmentcheckout",
+  "description": "Equipment checkout with manager approval, returns and HR partner handoff",
+  "latestVersion": "<version id>",
+  "organizationId": "<App Hub organization id>"
+}

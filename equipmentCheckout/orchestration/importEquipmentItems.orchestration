@@ -1,0 +1,1294 @@
+{
+  "flowVersion": "3.2.0",
+  "_type": "Flow",
+  "_value": {
+    "id": {
+      "_type": "String",
+      "_value": "5ab81ea9d2ef418388174a6a0e211b38"
+    },
+    "name": {
+      "_type": "Identifier",
+      "_value": "importEquipmentItems"
+    },
+    "type": {
+      "_type": "FlowType",
+      "_value": ".maya.FlowSync"
+    },
+    "securityDomains": {
+      "_type": [
+        "Opt",
+        [
+          "List",
+          "String"
+        ]
+      ],
+      "_value": {
+        "_type": [
+          "List",
+          "String"
+        ],
+        "_value": [
+          {
+            "_type": "String",
+            "_value": "ManageEquipment"
+          }
+        ]
+      }
+    },
+    "resources": {
+      "_type": "ResourceProvider",
+      "_value": {
+        "fileLikeResources": {
+          "_type": [
+            "Map",
+            "Resource"
+          ],
+          "_value": {
+            "18d02a6c-24ef-4848-a8fb-ba9eb9d56c24": {
+              "_type": "InlineResource",
+              "_value": {
+                "name": {
+                  "_type": "String",
+                  "_value": "18d02a6c-24ef-4848-a8fb-ba9eb9d56c24"
+                },
+                "content": {
+                  "_type": "String",
+                  "_value": "{\"assetTag\":\"@PLACEHOLDER@\",\"itemName\":\"@PLACEHOLDER@\",\"category\":\"@PLACEHOLDER@\",\"serialNumber\":\"@PLACEHOLDER@\",\"notes\":\"@PLACEHOLDER@\",\"status\":\"AVAILABLE\",\"location\":{\"id\":\"@PLACEHOLDER@\"}}"
+                },
+                "notes": {
+                  "_type": [
+                    "List",
+                    "Note"
+                  ],
+                  "_value": [
+                    {
+                      "_type": "Note",
+                      "_value": {
+                        "key": {
+                          "_type": "String",
+                          "_value": "resource-type"
+                        },
+                        "value": {
+                          "_type": "String",
+                          "_value": "SCHEMA"
+                        }
+                      }
+                    },
+                    {
+                      "_type": "Note",
+                      "_value": {
+                        "key": {
+                          "_type": "String",
+                          "_value": "resource-display-name"
+                        },
+                        "value": {
+                          "_type": "String",
+                          "_value": "EquipmentItemPayload"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "credentials": {
+          "_type": [
+            "Map",
+            "Credential"
+          ],
+          "_value": {}
+        },
+        "xmlNamespaces": {
+          "_type": [
+            "Map",
+            "String"
+          ],
+          "_value": {}
+        },
+        "retryConfigs": {
+          "_type": [
+            "Map",
+            [
+              "WithNotes",
+              "RetryConfig"
+            ]
+          ],
+          "_value": {}
+        },
+        "csvFormats": {
+          "_type": [
+            "Map",
+            "CsvFormat"
+          ],
+          "_value": {}
+        },
+        "pollingConfigs": {
+          "_type": [
+            "Map",
+            "PollingConfig"
+          ],
+          "_value": {}
+        }
+      }
+    },
+    "start": {
+      "_type": "StartBasic",
+      "_value": {
+        "structuredRequest": {
+          "_type": [
+            "Opt",
+            "RequestStructure"
+          ],
+          "_value": null
+        },
+        "hasMultipartData": {
+          "_type": "Boolean",
+          "_value": true
+        },
+        "mcpToolConfig": {
+          "_type": [
+            "Opt",
+            "MCPToolInputConfig"
+          ],
+          "_value": null
+        },
+        "notes": {
+          "_type": [
+            "List",
+            "Note"
+          ],
+          "_value": []
+        }
+      }
+    },
+    "nodes": {
+      "_type": [
+        "List",
+        "Node"
+      ],
+      "_value": [
+        {
+          "_type": "Loop",
+          "_value": {
+            "name": {
+              "_type": "Identifier",
+              "_value": "ParseRows"
+            },
+            "isDisabled": {
+              "_type": "Boolean",
+              "_value": false
+            },
+            "errorHandler": {
+              "_type": [
+                "Opt",
+                "ErrorHandler"
+              ],
+              "_value": null
+            },
+            "inputData": {
+              "_type": [
+                "Expr",
+                [
+                  "Iterator",
+                  [
+                    "Opt",
+                    "Any"
+                  ]
+                ]
+              ],
+              "_value": {
+                "type": {
+                  "_type": "Type",
+                  "_value": [
+                    "Iterator",
+                    [
+                      "CsvRow",
+                      {
+                        "_type": [
+                          "Opt",
+                          "CsvFormatRef"
+                        ],
+                        "_value": null
+                      }
+                    ]
+                  ]
+                },
+                "source": {
+                  "_type": "String",
+                  "_value": "data.start.entity.part(1).content().asTEXT().toString().asCSV().rows(1)"
+                },
+                "isAuto": {
+                  "_type": "Boolean",
+                  "_value": false
+                }
+              }
+            },
+            "filter": {
+              "_type": [
+                "Opt",
+                [
+                  "Expr",
+                  "Boolean"
+                ]
+              ],
+              "_value": null
+            },
+            "aggregateNode": {
+              "_type": [
+                "Opt",
+                "Aggregate"
+              ],
+              "_value": {
+                "_type": "Aggregate",
+                "_value": {
+                  "name": {
+                    "_type": "Identifier",
+                    "_value": "ParsedItems"
+                  },
+                  "isDisabled": {
+                    "_type": "Boolean",
+                    "_value": false
+                  },
+                  "failOnEmptyStream": {
+                    "_type": "Boolean",
+                    "_value": false
+                  },
+                  "foldValues": {
+                    "_type": [
+                      "List",
+                      "FoldValue"
+                    ],
+                    "_value": [
+                      {
+                        "_type": "JsonFoldValue",
+                        "_value": {
+                          "nameProp": {
+                            "_type": "Identifier",
+                            "_value": "items"
+                          },
+                          "data": {
+                            "_type": [
+                              "Expr",
+                              [
+                                "Json",
+                                {
+                                  "_type": [
+                                    "Opt",
+                                    "JsonSchemaRef"
+                                  ],
+                                  "_value": null
+                                }
+                              ]
+                            ],
+                            "_value": {
+                              "type": {
+                                "_type": "Type",
+                                "_value": [
+                                  "Json",
+                                  {
+                                    "_type": [
+                                      "Opt",
+                                      "JsonSchemaRef"
+                                    ],
+                                    "_value": null
+                                  }
+                                ]
+                              },
+                              "source": {
+                                "_type": "String",
+                                "_value": "data(\"ItemJson\", \"data\").asJSON()"
+                              },
+                              "isAuto": {
+                                "_type": "Boolean",
+                                "_value": false
+                              }
+                            }
+                          },
+                          "condition": {
+                            "_type": [
+                              "Opt",
+                              [
+                                "Expr",
+                                "Boolean"
+                              ]
+                            ],
+                            "_value": null
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "notes": {
+                    "_type": [
+                      "List",
+                      "Note"
+                    ],
+                    "_value": [
+                      {
+                        "_type": "Note",
+                        "_value": {
+                          "key": {
+                            "_type": "String",
+                            "_value": "description"
+                          },
+                          "value": {
+                            "_type": "String",
+                            "_value": ""
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "earlyStopCondition": {
+              "_type": [
+                "Opt",
+                "EarlyStopCondition"
+              ],
+              "_value": null
+            },
+            "sorts": {
+              "_type": [
+                "List",
+                "SortedBy"
+              ],
+              "_value": []
+            },
+            "locale": {
+              "_type": [
+                "Opt",
+                "Locale"
+              ],
+              "_value": null
+            },
+            "group": {
+              "_type": "ImplicitGroup",
+              "_value": {
+                "name": {
+                  "_type": "Identifier",
+                  "_value": "_group_ParseRows"
+                },
+                "isDisabled": {
+                  "_type": "Boolean",
+                  "_value": false
+                },
+                "errorHandler": {
+                  "_type": [
+                    "Opt",
+                    "ErrorHandler"
+                  ],
+                  "_value": null
+                },
+                "nodes": {
+                  "_type": [
+                    "List",
+                    "Node"
+                  ],
+                  "_value": [
+                    {
+                      "_type": "CreateJson",
+                      "_value": {
+                        "name": {
+                          "_type": "Identifier",
+                          "_value": "ItemJson"
+                        },
+                        "isDisabled": {
+                          "_type": "Boolean",
+                          "_value": false
+                        },
+                        "errorHandler": {
+                          "_type": [
+                            "Opt",
+                            "ErrorHandler"
+                          ],
+                          "_value": null
+                        },
+                        "structure": {
+                          "_type": "JsonTemplateRef",
+                          "_value": "18d02a6c-24ef-4848-a8fb-ba9eb9d56c24"
+                        },
+                        "values": {
+                          "_type": [
+                            "List",
+                            "Mapping"
+                          ],
+                          "_value": [
+                            {
+                              "_type": "Mapping",
+                              "_value": {
+                                "path": {
+                                  "_type": "JsonPath",
+                                  "_value": "$.assetTag"
+                                },
+                                "expr": {
+                                  "_type": [
+                                    "Expr",
+                                    "String"
+                                  ],
+                                  "_value": {
+                                    "type": {
+                                      "_type": "Type",
+                                      "_value": "String"
+                                    },
+                                    "source": {
+                                      "_type": "String",
+                                      "_value": "data.ParseRows.item.toStringList().get(0)"
+                                    },
+                                    "isAuto": {
+                                      "_type": "Boolean",
+                                      "_value": false
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "_type": "Mapping",
+                              "_value": {
+                                "path": {
+                                  "_type": "JsonPath",
+                                  "_value": "$.itemName"
+                                },
+                                "expr": {
+                                  "_type": [
+                                    "Expr",
+                                    "String"
+                                  ],
+                                  "_value": {
+                                    "type": {
+                                      "_type": "Type",
+                                      "_value": "String"
+                                    },
+                                    "source": {
+                                      "_type": "String",
+                                      "_value": "data.ParseRows.item.toStringList().get(1)"
+                                    },
+                                    "isAuto": {
+                                      "_type": "Boolean",
+                                      "_value": false
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "_type": "Mapping",
+                              "_value": {
+                                "path": {
+                                  "_type": "JsonPath",
+                                  "_value": "$.category"
+                                },
+                                "expr": {
+                                  "_type": [
+                                    "Expr",
+                                    "String"
+                                  ],
+                                  "_value": {
+                                    "type": {
+                                      "_type": "Type",
+                                      "_value": "String"
+                                    },
+                                    "source": {
+                                      "_type": "String",
+                                      "_value": "data.ParseRows.item.toStringList().get(2)"
+                                    },
+                                    "isAuto": {
+                                      "_type": "Boolean",
+                                      "_value": false
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "_type": "Mapping",
+                              "_value": {
+                                "path": {
+                                  "_type": "JsonPath",
+                                  "_value": "$.serialNumber"
+                                },
+                                "expr": {
+                                  "_type": [
+                                    "Expr",
+                                    "String"
+                                  ],
+                                  "_value": {
+                                    "type": {
+                                      "_type": "Type",
+                                      "_value": "String"
+                                    },
+                                    "source": {
+                                      "_type": "String",
+                                      "_value": "data.ParseRows.item.toStringList().get(3)"
+                                    },
+                                    "isAuto": {
+                                      "_type": "Boolean",
+                                      "_value": false
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "_type": "Mapping",
+                              "_value": {
+                                "path": {
+                                  "_type": "JsonPath",
+                                  "_value": "$.notes"
+                                },
+                                "expr": {
+                                  "_type": [
+                                    "Expr",
+                                    "String"
+                                  ],
+                                  "_value": {
+                                    "type": {
+                                      "_type": "Type",
+                                      "_value": "String"
+                                    },
+                                    "source": {
+                                      "_type": "String",
+                                      "_value": "data.ParseRows.item.toStringList().get(4)"
+                                    },
+                                    "isAuto": {
+                                      "_type": "Boolean",
+                                      "_value": false
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "_type": "Mapping",
+                              "_value": {
+                                "path": {
+                                  "_type": "JsonPath",
+                                  "_value": "$.location.id"
+                                },
+                                "expr": {
+                                  "_type": [
+                                    "Expr",
+                                    "String"
+                                  ],
+                                  "_value": {
+                                    "type": {
+                                      "_type": "Type",
+                                      "_value": "String"
+                                    },
+                                    "source": {
+                                      "_type": "String",
+                                      "_value": "data.start.entity.part(0).content().asJSON().stringAtJsonPath(\"$.locationId\")"
+                                    },
+                                    "isAuto": {
+                                      "_type": "Boolean",
+                                      "_value": false
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "notes": {
+                          "_type": [
+                            "List",
+                            "Note"
+                          ],
+                          "_value": [
+                            {
+                              "_type": "Note",
+                              "_value": {
+                                "key": {
+                                  "_type": "String",
+                                  "_value": "description"
+                                },
+                                "value": {
+                                  "_type": "String",
+                                  "_value": "One EquipmentItem create payload per CSV row. Column order: assetTag, itemName, category, serialNumber, notes"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                },
+                "notes": {
+                  "_type": [
+                    "List",
+                    "Note"
+                  ],
+                  "_value": [
+                    {
+                      "_type": "Note",
+                      "_value": {
+                        "key": {
+                          "_type": "String",
+                          "_value": "label"
+                        },
+                        "value": {
+                          "_type": "String",
+                          "_value": ""
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "notes": {
+              "_type": [
+                "List",
+                "Note"
+              ],
+              "_value": [
+                {
+                  "_type": "Note",
+                  "_value": {
+                    "key": {
+                      "_type": "String",
+                      "_value": "description"
+                    },
+                    "value": {
+                      "_type": "String",
+                      "_value": "Part 0 of the upload is the JSON metadata (locationId), part 1 is the CSV file. Row 1 is the header."
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "_type": "Loop",
+          "_value": {
+            "name": {
+              "_type": "Identifier",
+              "_value": "ImportPages"
+            },
+            "isDisabled": {
+              "_type": "Boolean",
+              "_value": false
+            },
+            "errorHandler": {
+              "_type": [
+                "Opt",
+                "ErrorHandler"
+              ],
+              "_value": null
+            },
+            "inputData": {
+              "_type": [
+                "Expr",
+                [
+                  "Iterator",
+                  [
+                    "Opt",
+                    "Any"
+                  ]
+                ]
+              ],
+              "_value": {
+                "type": {
+                  "_type": "Type",
+                  "_value": [
+                    "Iterator",
+                    [
+                      "Json",
+                      {
+                        "_type": [
+                          "Opt",
+                          "JsonSchemaRef"
+                        ],
+                        "_value": null
+                      }
+                    ]
+                  ]
+                },
+                "source": {
+                  "_type": "String",
+                  "_value": "data(\"ParseRows\", \"items\").iterator(\"$[*]\", 100)"
+                },
+                "isAuto": {
+                  "_type": "Boolean",
+                  "_value": false
+                }
+              }
+            },
+            "filter": {
+              "_type": [
+                "Opt",
+                [
+                  "Expr",
+                  "Boolean"
+                ]
+              ],
+              "_value": null
+            },
+            "aggregateNode": {
+              "_type": [
+                "Opt",
+                "Aggregate"
+              ],
+              "_value": {
+                "_type": "Aggregate",
+                "_value": {
+                  "name": {
+                    "_type": "Identifier",
+                    "_value": "PageResults"
+                  },
+                  "isDisabled": {
+                    "_type": "Boolean",
+                    "_value": false
+                  },
+                  "failOnEmptyStream": {
+                    "_type": "Boolean",
+                    "_value": false
+                  },
+                  "foldValues": {
+                    "_type": [
+                      "List",
+                      "FoldValue"
+                    ],
+                    "_value": [
+                      {
+                        "_type": "JsonFoldValue",
+                        "_value": {
+                          "nameProp": {
+                            "_type": "Identifier",
+                            "_value": "pages"
+                          },
+                          "data": {
+                            "_type": [
+                              "Expr",
+                              [
+                                "Json",
+                                {
+                                  "_type": [
+                                    "Opt",
+                                    "JsonSchemaRef"
+                                  ],
+                                  "_value": null
+                                }
+                              ]
+                            ],
+                            "_value": {
+                              "type": {
+                                "_type": "Type",
+                                "_value": [
+                                  "Json",
+                                  {
+                                    "_type": [
+                                      "Opt",
+                                      "JsonSchemaRef"
+                                    ],
+                                    "_value": null
+                                  }
+                                ]
+                              },
+                              "source": {
+                                "_type": "String",
+                                "_value": "data(\"PostPage\", \"response\").asJSON()"
+                              },
+                              "isAuto": {
+                                "_type": "Boolean",
+                                "_value": false
+                              }
+                            }
+                          },
+                          "condition": {
+                            "_type": [
+                              "Opt",
+                              [
+                                "Expr",
+                                "Boolean"
+                              ]
+                            ],
+                            "_value": null
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "notes": {
+                    "_type": [
+                      "List",
+                      "Note"
+                    ],
+                    "_value": [
+                      {
+                        "_type": "Note",
+                        "_value": {
+                          "key": {
+                            "_type": "String",
+                            "_value": "description"
+                          },
+                          "value": {
+                            "_type": "String",
+                            "_value": ""
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "earlyStopCondition": {
+              "_type": [
+                "Opt",
+                "EarlyStopCondition"
+              ],
+              "_value": null
+            },
+            "sorts": {
+              "_type": [
+                "List",
+                "SortedBy"
+              ],
+              "_value": []
+            },
+            "locale": {
+              "_type": [
+                "Opt",
+                "Locale"
+              ],
+              "_value": null
+            },
+            "group": {
+              "_type": "ImplicitGroup",
+              "_value": {
+                "name": {
+                  "_type": "Identifier",
+                  "_value": "_group_ImportPages"
+                },
+                "isDisabled": {
+                  "_type": "Boolean",
+                  "_value": false
+                },
+                "errorHandler": {
+                  "_type": [
+                    "Opt",
+                    "ErrorHandler"
+                  ],
+                  "_value": null
+                },
+                "nodes": {
+                  "_type": [
+                    "List",
+                    "Node"
+                  ],
+                  "_value": [
+                    {
+                      "_type": "SendWorkdayApiRequest",
+                      "_value": {
+                        "name": {
+                          "_type": "Identifier",
+                          "_value": "PostPage"
+                        },
+                        "isDisabled": {
+                          "_type": "Boolean",
+                          "_value": false
+                        },
+                        "errorHandler": {
+                          "_type": [
+                            "Opt",
+                            "ErrorHandler"
+                          ],
+                          "_value": null
+                        },
+                        "body": {
+                          "_type": [
+                            "Opt",
+                            "DataRefBody"
+                          ],
+                          "_value": {
+                            "_type": "DataRefBody",
+                            "_value": {
+                              "dataRef": {
+                                "_type": [
+                                  "Expr",
+                                  "Data"
+                                ],
+                                "_value": {
+                                  "type": {
+                                    "_type": "Type",
+                                    "_value": "Data"
+                                  },
+                                  "source": {
+                                    "_type": "String",
+                                    "_value": "s\"${\"{\"}${\"\\\"data\\\":\"}${data(\"ImportPages\", \"item\")}${\"}\"}\""
+                                  },
+                                  "isAuto": {
+                                    "_type": "Boolean",
+                                    "_value": false
+                                  }
+                                }
+                              },
+                              "contentType": {
+                                "_type": [
+                                  "Opt",
+                                  "String"
+                                ],
+                                "_value": {
+                                  "_type": "String",
+                                  "_value": "application/json"
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "path": {
+                          "_type": [
+                            "Expr",
+                            "String"
+                          ],
+                          "_value": {
+                            "type": {
+                              "_type": "Type",
+                              "_value": "String"
+                            },
+                            "source": {
+                              "_type": "String",
+                              "_value": "s\"${\"/apps/\"}${context.appReferenceId()}${\"/v1/equipmentItems\"}\""
+                            },
+                            "isAuto": {
+                              "_type": "Boolean",
+                              "_value": false
+                            }
+                          }
+                        },
+                        "queryParams": {
+                          "_type": [
+                            "List",
+                            "QueryParam"
+                          ],
+                          "_value": [
+                            {
+                              "_type": "QueryParam",
+                              "_value": {
+                                "name": {
+                                  "_type": "String",
+                                  "_value": "bulk"
+                                },
+                                "value": {
+                                  "_type": [
+                                    "Expr",
+                                    "String"
+                                  ],
+                                  "_value": {
+                                    "type": {
+                                      "_type": "Type",
+                                      "_value": "String"
+                                    },
+                                    "source": {
+                                      "_type": "String",
+                                      "_value": "\"true\""
+                                    },
+                                    "isAuto": {
+                                      "_type": "Boolean",
+                                      "_value": false
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "method": {
+                          "_type": "HttpMethod",
+                          "_value": "POST"
+                        },
+                        "headers": {
+                          "_type": [
+                            "List",
+                            "Header"
+                          ],
+                          "_value": []
+                        },
+                        "auth": {
+                          "_type": "WorkdayCredentialRef",
+                          "_value": {
+                            "resourceName": {
+                              "_type": "String",
+                              "_value": "_DEFAULT_WORKDAY_CREDENTIAL"
+                            }
+                          }
+                        },
+                        "isChunked": {
+                          "_type": "Boolean",
+                          "_value": false
+                        },
+                        "connectTimeoutMs": {
+                          "_type": "Long",
+                          "_value": 10000
+                        },
+                        "responseTimeoutMs": {
+                          "_type": "Long",
+                          "_value": 20000
+                        },
+                        "overallTimeoutMs": {
+                          "_type": "Long",
+                          "_value": 300000
+                        },
+                        "retryConfigRef": {
+                          "_type": "RetryConfigRef",
+                          "_value": "_DEFAULT_WORKDAY_RETRY_CONFIG"
+                        },
+                        "tlsConfig": {
+                          "_type": [
+                            "Opt",
+                            "TlsConfig"
+                          ],
+                          "_value": null
+                        },
+                        "tlsConfigRef": {
+                          "_type": [
+                            "Opt",
+                            "TlsConfigRef"
+                          ],
+                          "_value": null
+                        },
+                        "proxyConfig": {
+                          "_type": [
+                            "Opt",
+                            "ProxyConfig"
+                          ],
+                          "_value": null
+                        },
+                        "responseType": {
+                          "_type": "HttpResponseType",
+                          "_value": "Json"
+                        },
+                        "longRunningRequest": {
+                          "_type": "Boolean",
+                          "_value": false
+                        },
+                        "notes": {
+                          "_type": [
+                            "List",
+                            "Note"
+                          ],
+                          "_value": [
+                            {
+                              "_type": "Note",
+                              "_value": {
+                                "key": {
+                                  "_type": "String",
+                                  "_value": "description"
+                                },
+                                "value": {
+                                  "_type": "String",
+                                  "_value": "Bulk create. The response lists one {status, body} per record, in input order."
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                },
+                "notes": {
+                  "_type": [
+                    "List",
+                    "Note"
+                  ],
+                  "_value": [
+                    {
+                      "_type": "Note",
+                      "_value": {
+                        "key": {
+                          "_type": "String",
+                          "_value": "label"
+                        },
+                        "value": {
+                          "_type": "String",
+                          "_value": ""
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "notes": {
+              "_type": [
+                "List",
+                "Note"
+              ],
+              "_value": [
+                {
+                  "_type": "Note",
+                  "_value": {
+                    "key": {
+                      "_type": "String",
+                      "_value": "description"
+                    },
+                    "value": {
+                      "_type": "String",
+                      "_value": "The bulk API accepts at most 100 records per call."
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "end": {
+      "_type": "EndSync",
+      "_value": {
+        "headers": {
+          "_type": [
+            "List",
+            "Header"
+          ],
+          "_value": []
+        },
+        "body": {
+          "_type": [
+            "Opt",
+            "DataRefBody"
+          ],
+          "_value": {
+            "_type": "DataRefBody",
+            "_value": {
+              "dataRef": {
+                "_type": [
+                  "Expr",
+                  "Data"
+                ],
+                "_value": {
+                  "type": {
+                    "_type": "Type",
+                    "_value": "Data"
+                  },
+                  "source": {
+                    "_type": "String",
+                    "_value": "s\"${\"{\\\"items\\\":\"}${data(\"ParseRows\", \"items\")}${\",\\\"pages\\\":\"}${data(\"ImportPages\", \"pages\")}${\"}\"}\""
+                  },
+                  "isAuto": {
+                    "_type": "Boolean",
+                    "_value": false
+                  }
+                }
+              },
+              "contentType": {
+                "_type": [
+                  "Opt",
+                  "String"
+                ],
+                "_value": {
+                  "_type": "String",
+                  "_value": "application/json"
+                }
+              }
+            }
+          }
+        },
+        "mcpToolConfig": {
+          "_type": [
+            "Opt",
+            "MCPToolOutputConfig"
+          ],
+          "_value": null
+        },
+        "notes": {
+          "_type": [
+            "List",
+            "Note"
+          ],
+          "_value": []
+        }
+      }
+    },
+    "errorHandler": {
+      "_type": [
+        "Opt",
+        "ErrorHandler"
+      ],
+      "_value": null
+    },
+    "cancelBarrier": {
+      "_type": [
+        "Opt",
+        "Identifier"
+      ],
+      "_value": null
+    },
+    "defaultTlsConfigRef": {
+      "_type": [
+        "Opt",
+        "TlsConfigRef"
+      ],
+      "_value": null
+    },
+    "defaultWorkdayCredentialRef": {
+      "_type": [
+        "Opt",
+        "AccessTokenFromInitiatingUser"
+      ],
+      "_value": {
+        "_type": "AccessTokenFromInitiatingUser",
+        "_value": "AccessTokenFromInitiatingUser"
+      }
+    },
+    "defaultLocale": {
+      "_type": "Locale",
+      "_value": {
+        "value": {
+          "_type": [
+            "Expr",
+            "String"
+          ],
+          "_value": {
+            "type": {
+              "_type": "Type",
+              "_value": "String"
+            },
+            "source": {
+              "_type": "String",
+              "_value": "\"\"\"en_US\"\"\""
+            },
+            "isAuto": {
+              "_type": "Boolean",
+              "_value": false
+            }
+          }
+        }
+      }
+    },
+    "notes": {
+      "_type": [
+        "List",
+        "Note"
+      ],
+      "_value": [
+        {
+          "_type": "Note",
+          "_value": {
+            "key": {
+              "_type": "String",
+              "_value": "description"
+            },
+            "value": {
+              "_type": "String",
+              "_value": "Bulk-imports EquipmentItem records from a CSV uploaded on the importItems page. Returns {items, pages} so the page can pair each row with its result."
+            }
+          }
+        }
+      ]
+    },
+    "mayaVersion": {
+      "_type": "String",
+      "_value": "1.4173.0"
+    }
+  }
+}

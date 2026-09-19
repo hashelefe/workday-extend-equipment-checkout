@@ -1,0 +1,103 @@
+{
+  "id": 1,
+  "name": "EquipmentItem",
+  "label": "Equipment Item",
+  "defaultSecurityDomains": [
+    "ManageEquipment",
+    "RequestEquipment",
+    "ProcessEquipment"
+  ],
+  "defaultCollection": {
+    "name": "equipmentItems",
+    "label": "Equipment Items",
+    "description": "Every asset in the equipment catalog, whatever its current status"
+  },
+  "fields": [
+    {
+      "id": 1,
+      "name": "assetTag",
+      "label": "Asset Tag",
+      "type": "TEXT",
+      "useForDisplay": true,
+      "isReferenceId": true,
+      "description": "Unique asset tag physically labelled on the item, e.g. LAP-0042"
+    },
+    {
+      "id": 2,
+      "name": "itemName",
+      "label": "Item Name",
+      "type": "TEXT",
+      "description": "Human readable name, e.g. MacBook Pro 14 M3"
+    },
+    {
+      "id": 3,
+      "name": "category",
+      "label": "Category",
+      "type": "TEXT",
+      "description": "Grouping used to filter the catalog: Laptop, Monitor, Phone, Headset, Other"
+    },
+    {
+      "id": 4,
+      "name": "serialNumber",
+      "label": "Serial Number",
+      "type": "TEXT",
+      "description": "Manufacturer serial number"
+    },
+    {
+      "id": 5,
+      "name": "status",
+      "label": "Status",
+      "type": "TEXT",
+      "description": "AVAILABLE, CHECKED_OUT, MAINTENANCE or RETIRED"
+    },
+    {
+      "id": 6,
+      "name": "location",
+      "label": "Location",
+      "type": "SINGLE_INSTANCE",
+      "target": "LOCATION",
+      "description": "Workday location this item is normally stored at"
+    },
+    {
+      "id": 7,
+      "name": "currentHolder",
+      "label": "Current Holder",
+      "type": "SINGLE_INSTANCE",
+      "target": "WORKER",
+      "secureByTarget": false,
+      "description": "Worker currently holding the item, empty when available"
+    },
+    {
+      "id": 8,
+      "name": "notes",
+      "label": "Notes",
+      "type": "TEXT",
+      "description": "Free text notes about condition or accessories"
+    },
+    {
+      "id": 9,
+      "name": "eligibleFromLevel",
+      "label": "Eligible From Management Level",
+      "type": "INTEGER",
+      "description": "Most junior management level that may borrow this item. Lower numbers are more senior, so 5 means levels 1 to 5. Empty means everyone"
+    },
+    {
+      "id": 10,
+      "name": "eligibleLocation",
+      "label": "Eligible Location",
+      "type": "SINGLE_INSTANCE",
+      "target": "LOCATION",
+      "description": "Location whose workers may borrow this item. Empty means the item's own location"
+    }
+  ],
+  "derivedFields": [
+    {
+      "id": 1,
+      "name": "displayLabel",
+      "label": "Display Label",
+      "type": "TEXT",
+      "expression": "assetTag + ' - ' + itemName",
+      "description": "Asset tag and name combined, used in dropdowns and grids"
+    }
+  ]
+}

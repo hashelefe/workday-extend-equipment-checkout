@@ -1,0 +1,187 @@
+{
+  "id": "acknowledge",
+  "securityDomains": [
+    "RequestEquipment"
+  ],
+  "script": "<%
+    const theRequest = function() {
+      return empty(currentRequest) ? null : currentRequest.data.currentRequest.data[0];
+    };
+  %>",
+  "endPoints": [
+    {
+      "name": "bpEventStep",
+      "baseUrlType": "workday-bp",
+      "url": "<% `eventSteps/{{queryParams.eventStepId}}` %>",
+      "authType": "sso",
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "eventInfo",
+      "baseUrlType": "workday-bp",
+      "url": "<% `events/{{bpEventStep.event.id}}` %>",
+      "authType": "sso",
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "currentRequest",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "exclude": "<% empty(eventInfo) %>",
+      "graphQuery": {
+        "queryId": "currentRequest",
+        "parameters": {
+          "requestId": "<% eventInfo['for'].id %>"
+        }
+      },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "markCollected",
+        "baseUrlType": "workday-graph",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "graphQuery": {
+          "queryId": "updateRequest",
+          "variables": {
+            "updateRequest_input": {
+              "status": "<% 'APPROVED' %>"
+            },
+            "updateRequest_requestId": {
+              "id": "<% eventInfo['for'].id %>",
+              "type": "WID"
+            }
+          }
+        },
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      },
+      {
+        "name": "checkOutItem",
+        "baseUrlType": "workday-graph",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "graphQuery": {
+          "queryId": "updateItem",
+          "variables": {
+            "updateItem_input": {
+              "status": "<% 'CHECKED_OUT' %>",
+              "currentHolder": {
+                "id": {
+                  "id": "<% theRequest().requester.workdayID.id %>",
+                  "type": "WID"
+                }
+              }
+            },
+            "updateItem_itemId": {
+              "id": "<% theRequest().item.workdayID.id %>",
+              "type": "WID"
+            }
+          }
+        },
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      },
+      {
+        "name": "submitStep",
+        "baseUrlType": "workday-bp",
+        "url": "<% `eventSteps/{{queryParams.eventStepId}}/submit` %>",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "values": [
+          {
+            "outboundPath": "stepAction.id",
+            "value": "<% /* Workday's delivered 'Submit' step action. Without this call the step never completes. */ 'd9e4223e446c11de98360015c5e6daf6' %>"
+          }
+        ],
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      }
+    ],
+    "responseErrorDetail": {
+      "errorSummary": "<% error %>",
+      "errors": "<% list:mapAttribute(errors, 'error') %>"
+    }
+  },
+  "presentation": {
+    "pageType": "edit",
+    "title": {
+      "type": "title",
+      "label": "<% presentationLabels.AcknowledgeTitle %>"
+    },
+    "body": {
+      "type": "section",
+      "id": "acknowledgeBody",
+      "children": [
+        {
+          "type": "section",
+          "id": "acknowledgeDetailsSection",
+          "title": "<% presentationLabels.RequestSummary %>",
+          "render": "<% !empty(currentRequest) %>",
+          "children": [
+            {
+              "type": "richText",
+              "id": "acknowledgeGuidance",
+              "enabled": false,
+              "value": "<% presentationLabels.AcknowledgeGuidance %>"
+            },
+            {
+              "type": "text",
+              "id": "acknowledgeItem",
+              "label": "<% presentationLabels.Item %>",
+              "enabled": false,
+              "value": "<% theRequest().item.descriptor %>"
+            },
+            {
+              "type": "date",
+              "id": "acknowledgeDueDate",
+              "label": "<% presentationLabels.DueDate %>",
+              "datePrecision": "DAY",
+              "enabled": false,
+              "value": "<% theRequest().dueDate %>"
+            },
+            {
+              "type": "text",
+              "id": "acknowledgeCourier",
+              "label": "<% presentationLabels.CourierName %>",
+              "enabled": false,
+              "value": "<% theRequest().courierName %>",
+              "render": "<% theRequest().deliveryMethod == 'COURIER' %>"
+            },
+            {
+              "type": "text",
+              "id": "acknowledgeTracking",
+              "label": "<% presentationLabels.TrackingNumber %>",
+              "enabled": false,
+              "value": "<% theRequest().trackingNumber %>",
+              "render": "<% theRequest().deliveryMethod == 'COURIER' %>"
+            },
+            {
+              "type": "textArea",
+              "id": "acknowledgeTrackingNotes",
+              "label": "<% presentationLabels.TrackingNotes %>",
+              "enabled": false,
+              "value": "<% theRequest().trackingNotes %>",
+              "render": "<% theRequest().deliveryMethod == 'COURIER' %>"
+            },
+            {
+              "type": "checkBox",
+              "id": "acknowledgeConfirm",
+              "label": "<% presentationLabels.AcknowledgeConfirm %>",
+              "required": true,
+              "value": "<% false %>"
+            }
+          ]
+        },
+        {
+          "type": "richText",
+          "id": "acknowledgeNotFound",
+          "enabled": false,
+          "value": "<% presentationLabels.RequestNotFound %>",
+          "render": "<% empty(currentRequest) %>"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "id": "checkoutEvents",
+  "_comment": "Every checkout approval event with its BP status. Joined to CheckoutRequest rows in page script on businessProcessTarget, the same way Workday's workFromAlmostAnywhere sample does.",
+  "parameters": ["applicationId"],
+  "query": "
+    SELECT workdayID, businessProcessTarget, status
+    FROM <% applicationId + '_equipmentCheckoutApprovalEvents' %>
+  ",
+  "limit": "100"
+}

@@ -1,0 +1,32 @@
+{
+  "id": "requestSubmitted",
+  "securityDomains": [
+    "RequestEquipment"
+  ],
+  "presentation": {
+    "microConclusion": true,
+    "title": {
+      "type": "title",
+      "label": "<% presentationLabels.RequestSubmittedTitle %>"
+    },
+    "body": {
+      "type": "section",
+      "id": "requestSubmittedBody",
+      "children": [
+        {
+          "type": "richText",
+          "id": "requestSubmittedMessage",
+          "enabled": false,
+          "value": "<% presentationLabels.RequestSubmittedMessage %>"
+        },
+        {
+          "type": "button",
+          "id": "requestSubmittedMyRequests",
+          "action": "LINK",
+          "label": "<% presentationLabels.MyRequests %>",
+          "taskReference": { "taskId": "myRequests" }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "id": "resolveNewItem",
+  "securityDomains": [
+    "ManageEquipment",
+    "ProcessEquipment"
+  ],
+  "script": "<%
+    const outcomeOptions = function() {
+      return [
+        {'id': 'ADDED', 'descriptor': presentationLabels.OutcomeAdded},
+        {'id': 'DECLINED', 'descriptor': presentationLabels.OutcomeDeclined}
+      ];
+    };
+  %>",
+  "endPoints": [
+    {
+      "name": "newItem",
+      "baseUrlType": "app",
+      "url": "<% `newItemRequests/{{queryParams.newItemId}}` %>",
+      "authType": "sso",
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "answerNewItem",
+        "baseUrlType": "app",
+        "url": "<% `newItemRequests/{{queryParams.newItemId}}` %>",
+        "httpMethod": "PATCH",
+        "authType": "sso",
+        "onSend": "<% return {'status': outcome.value[0], 'responseNote': responseNote.value}; %>",
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      }
+    ],
+    "responseErrorDetail": {
+      "errorSummary": "<% error %>",
+      "errors": "<% list:mapAttribute(errors, 'error') %>"
+    }
+  },
+  "presentation": {
+    "pageType": "edit",
+    "title": {
+      "type": "title",
+      "label": "<% presentationLabels.ResolveNewItemTitle %>"
+    },
+    "body": {
+      "type": "section",
+      "id": "resolveNewItemBody",
+      "children": [
+        {
+          "type": "section",
+          "id": "newItemSummarySection",
+          "title": "<% presentationLabels.RequestSummary %>",
+          "children": [
+            { "type": "text", "id": "newItemDescriptionView", "label": "<% presentationLabels.ItemDescription %>", "enabled": false, "value": "<% newItem.itemDescription %>" },
+            { "type": "text", "id": "newItemCategoryView", "label": "<% presentationLabels.Category %>", "enabled": false, "value": "<% newItem.category %>" },
+            { "type": "text", "id": "newItemRequestedByView", "label": "<% presentationLabels.Requester %>", "enabled": false, "value": "<% newItem.requestedBy.descriptor %>" },
+            { "type": "text", "id": "newItemLocationView", "label": "<% presentationLabels.Location %>", "enabled": false, "value": "<% newItem.location.descriptor %>" },
+            { "type": "textArea", "id": "newItemJustificationView", "label": "<% presentationLabels.Justification %>", "enabled": false, "value": "<% newItem.justification %>" }
+          ]
+        },
+        {
+          "type": "section",
+          "id": "newItemAnswerSection",
+          "title": "<% presentationLabels.YourDecision %>",
+          "children": [
+            {
+              "type": "richText",
+              "id": "newItemAnswerGuidance",
+              "enabled": false,
+              "value": "<% presentationLabels.ResolveNewItemGuidance %>"
+            },
+            {
+              "type": "dropdown",
+              "id": "outcome",
+              "label": "<% presentationLabels.Outcome %>",
+              "required": true,
+              "values": "<% outcomeOptions() %>"
+            },
+            {
+              "type": "textArea",
+              "id": "responseNote",
+              "label": "<% presentationLabels.ResponseToEmployee %>",
+              "required": true
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

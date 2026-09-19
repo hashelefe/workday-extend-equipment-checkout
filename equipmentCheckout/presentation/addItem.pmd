@@ -1,0 +1,122 @@
+{
+  "id": "addItem",
+  "securityDomains": [
+    "ManageEquipment"
+  ],
+  "script": "<%
+    const categoryOptions = function() {
+      const names = ['Laptop', 'Monitor', 'Phone', 'Headset', 'Tablet', 'Other'];
+      return names.map(name => {{'id': name, 'descriptor': name}});
+    };
+
+    const validateAssetTag = function(field) {
+      if (empty(field.value)) {
+        field.clearError();
+      } else if (validate:match('^[A-Z]{2,4}-[0-9]{3,5}$', field.value)) {
+        field.clearError();
+      } else {
+        field.setError(presentationLabels.AssetTagFormat);
+      }
+    };
+  %>",
+  "endPoints": [
+    {
+      "name": "me",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "graphQuery": { "queryId": "me" },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "createItem",
+        "baseUrlType": "workday-graph",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "graphQuery": {
+          "queryId": "createItem",
+          "variables": {
+            "createItem_input": {
+              "assetTag": "<% assetTag.value %>",
+              "itemName": "<% itemName.value %>",
+              "category": "<% category.value[0] %>",
+              "serialNumber": "<% serialNumber.value %>",
+              "status": "<% 'AVAILABLE' %>",
+              "notes": "<% notes.value %>",
+              "location": {
+                "id": {
+                  "id": "<% me.data.worker.data[0].primaryJob.location.workdayID.id %>",
+                  "type": "WID"
+                }
+              }
+            }
+          }
+        },
+        "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+      }
+    ],
+    "responseErrorDetail": {
+      "errorSummary": "<% error %>",
+      "errors": "<% list:mapAttribute(errors, 'error') %>"
+    }
+  },
+  "presentation": {
+    "pageType": "edit",
+    "title": {
+      "type": "title",
+      "label": "<% presentationLabels.AddCatalogItem %>"
+    },
+    "body": {
+      "type": "section",
+      "id": "addItemBody",
+      "children": [
+        {
+          "type": "section",
+          "id": "itemDetailsSection",
+          "title": "<% presentationLabels.ItemDetails %>",
+          "children": [
+            {
+              "type": "richText",
+              "id": "addItemIntro",
+              "enabled": false,
+              "value": "<% presentationLabels.AddItemIntro %>"
+            },
+            {
+              "type": "text",
+              "id": "assetTag",
+              "label": "<% presentationLabels.AssetTag %>",
+              "required": true,
+              "onChange": "<% validateAssetTag(self) %>"
+            },
+            {
+              "type": "text",
+              "id": "itemName",
+              "label": "<% presentationLabels.ItemName %>",
+              "required": true
+            },
+            {
+              "type": "dropdown",
+              "id": "category",
+              "label": "<% presentationLabels.Category %>",
+              "required": true,
+              "values": "<% categoryOptions() %>"
+            },
+            {
+              "type": "text",
+              "id": "serialNumber",
+              "label": "<% presentationLabels.SerialNumber %>"
+            },
+            {
+              "type": "textArea",
+              "id": "notes",
+              "label": "<% presentationLabels.Notes %>"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "id": 2,
+  "name": "AllCheckouts",
+  "businessObject": "CheckoutRequest",
+  "defaultSecurityDomains": [
+    "ManageEquipment"
+  ],
+  "sortConfigs": [
+    {
+      "id": 1,
+      "order": "a",
+      "field": "requestedOn",
+      "direction": "DESCENDING"
+    }
+  ],
+  "columns": [
+    { "id": 1, "field": "item", "name": "Equipment Item", "order": "a" },
+    { "id": 2, "field": "requester", "name": "Requester", "order": "b" },
+    { "id": 3, "field": "status", "name": "Status", "order": "c" },
+    { "id": 4, "field": "requestedOn", "name": "Requested On", "order": "d" },
+    { "id": 5, "field": "dueDate", "name": "Due Date", "order": "e" },
+    { "id": 6, "field": "returnedOn", "name": "Returned On", "order": "f" },
+    { "id": 7, "field": "purpose", "name": "Purpose", "order": "g" },
+    { "id": 8, "field": "approver", "name": "Approver", "order": "h" },
+    { "id": 9, "field": "decisionNote", "name": "Decision Note", "order": "i" }
+  ]
+}

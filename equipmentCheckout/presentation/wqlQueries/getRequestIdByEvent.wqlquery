@@ -1,0 +1,11 @@
+{
+  "id": "getRequestIdByEvent",
+  "_comment": "Resolves a business process eventId back to the CheckoutRequest instance it targets. The events collection is the BP name in lowerCamelCase with 'Events' appended.",
+  "parameters": ["applicationId", "eventId"],
+  "query": "
+    SELECT businessProcessTarget
+    FROM <% applicationId + '_equipmentCheckoutApprovalEvents' %>
+    WHERE workdayID = '<% eventId %>'
+  ",
+  "limit": "1"
+}

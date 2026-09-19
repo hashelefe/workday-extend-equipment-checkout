@@ -1,0 +1,39 @@
+{
+  "id": 2,
+  "name": "EquipmentReturnHandoff",
+  "label": "Equipment Return Handoff",
+  "description": "Hands borrowed equipment back: the employee starts it, an HR partner inspects the item and approves the handoff, and the manager decides what to do with an item that came back damaged or incomplete.",
+  "targetBusinessObject": "EquipmentReturn",
+  "useForWorkflow": true,
+  "allowsCancel": true,
+  "approvalStep": {
+    "pageRoute": "/returnDetails/{eventId}",
+    "actions": [
+      "APPROVE",
+      "DENY"
+    ]
+  },
+  "actionSteps": [
+    {
+      "id": 1,
+      "name": "ProcessHandoff",
+      "label": "Process Equipment Handoff",
+      "description": "The HR partner takes the item back, records its condition and approves the handoff.",
+      "pageRoute": "/returnHandoff/{eventStepId}"
+    },
+    {
+      "id": 2,
+      "name": "ResolveItemIssue",
+      "label": "Resolve Returned Item Issue",
+      "description": "The manager decides whether a damaged or incomplete item goes back to stock, to repair, or is written off.",
+      "pageRoute": "/returnResolve/{eventStepId}"
+    }
+  ],
+  "details": {
+    "pageRoute": "/returnDetails/{eventId}"
+  },
+  "securityDomains": [
+    "ProcessEquipment",
+    "RequestEquipment"
+  ]
+}
