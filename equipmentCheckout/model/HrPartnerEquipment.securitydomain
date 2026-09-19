@@ -1,0 +1,6 @@
+{
+  "id": 4,
+  "name": "HrPartnerEquipment",
+  "label": "HR Partner: Equipment Checkout",
+  "enabledForPageSecurity": true
+}

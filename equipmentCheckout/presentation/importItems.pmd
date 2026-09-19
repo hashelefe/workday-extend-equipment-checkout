@@ -1,7 +1,8 @@
 {
   "id": "importItems",
   "securityDomains": [
-    "ManageEquipment"
+    "ManageEquipment",
+    "HrPartnerEquipment"
   ],
   "script": "<%
     const locationId = function() {

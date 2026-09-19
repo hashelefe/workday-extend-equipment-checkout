@@ -1,0 +1,23 @@
+{
+  "id": 5,
+  "name": "HrPartnerAccess",
+  "label": "HR Partner Access",
+  "defaultSecurityDomains": [
+    "HrPartnerEquipment"
+  ],
+  "defaultCollection": {
+    "name": "hrPartnerAccess",
+    "label": "HR Partner Access",
+    "description": "Holds no records. Only the HR Partner domain can read it, so the home page can tell HR partners apart by whether reading it is allowed"
+  },
+  "fields": [
+    {
+      "id": 1,
+      "name": "note",
+      "label": "Note",
+      "type": "TEXT",
+      "useForDisplay": true,
+      "description": "Unused; the object exists only as an access check"
+    }
+  ]
+}

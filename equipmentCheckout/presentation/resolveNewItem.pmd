@@ -2,7 +2,8 @@
   "id": "resolveNewItem",
   "securityDomains": [
     "ManageEquipment",
-    "ProcessEquipment"
+    "ProcessEquipment",
+    "HrPartnerEquipment"
   ],
   "script": "<%
     const outcomeOptions = function() {

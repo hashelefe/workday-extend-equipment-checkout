@@ -1,8 +1,8 @@
 # Coding conventions
 
 This app is kept clean against **[Arcane Auditor](https://github.com/Developers-and-Dragons/ArcaneAuditor) v1.2.0**
-— 42 static-analysis rules for Workday Extend. Current state: **0 findings** (down from 108
-on the first run).
+— 42 static-analysis rules for Workday Extend. Current state: **1 finding**, the documented `hrAccess` exception (down from 108 on the
+first run).
 
 Run it before every commit and before every upload:
 
@@ -11,7 +11,7 @@ Run it before every commit and before every upload:
 ```
 
 Severity is two-tier: **ACTION** (fix now) and **ADVICE** (fix unless you can justify it).
-Treat both as blocking here — the app is at zero and should stay there.
+Treat both as blocking here. The app is at one finding, the documented `hrAccess` exception, and should stay there.
 
 ---
 
@@ -137,9 +137,9 @@ expressions (`if (x)`, not `if (x == true)`). Descriptive array-method parameter
 
 ---
 
-## Two deliberate deviations
+## Three deliberate deviations
 
-Both are intentional. Don't "fix" them without reading the reasoning.
+All are intentional. Don't "fix" them without reading the reasoning.
 
 **1. `script` blocks contain raw newlines inside JSON strings.** Strict JSON forbids this;
 the Workday PMD parser accepts it and every official Workday sample relies on it. This keeps
@@ -152,6 +152,13 @@ unverified. Filtering on instance references (`requester`) *is* verified and is 
 server-side. See the README for how to push the rest down once you can inspect the generated
 `_Criteria` type.
 
+**3. `home.pmd`'s `hrAccess` endpoint fails on 400 only, not 403.** Arcane Auditor reports this as the
+one expected finding (`EndpointFailOnStatusCodesRule`), and it has no way to suppress it. PMD cannot read a
+user's security groups, so the home page tells HR partners apart by reading `hrPartnerAccess`, an
+empty object secured only by `HR Partner: Equipment Checkout`. A 403 there means "not an HR partner"
+and must not fail the page. The HR pages themselves are secured by page security, so this only
+decides whether the buttons are shown. Keep the exception to this one endpoint.
+
 ---
 
 ## Platform rules neither check catches
@@ -163,6 +170,7 @@ Both of these passed `validate.py` and Arcane Auditor, then failed on Workday.
 | A page `script` may contain **only function definitions** | Runtime: "Page script validation fails - only function definition is allowed in page script." | Put constants inside the function that uses them |
 | An `app` outbound endpoint that uses `self.data` needs its form fields bound with `"valueOutBinding": "<endpointName>.<field>"`; matching widget ids are **not** mapped automatically | Runtime: "Property Error found: .data" in `onSend` | Add `valueOutBinding` to each input widget |
 | An orchestration launched from a page must list a security domain, and that domain's `.securitydomain` needs `"enabledForOrchestrationSecurity": true` | Without the flag the build fails with "An invalid security domain was used"; with no domain at all the page got a 404 on `…/orchestrations/<name>/launch` and the orchestration never ran (suspected cause, pending confirmation on the tenant) | Set both, as `ManageEquipment` / `importEquipmentItems` do |
+| An orchestration can have only **one** security domain | Build: "Only one security domain can be defined for an orchestration" | Pick the single domain that should run it; users who launch it from other pages need that domain too |
 | No `for (const x : list)` loops | Build: "Parsing Error" in `Pmd:script`, then every function counts as undefined | Use `list.filter(x => {...})` / `.map(...)` / `.forEach(...)` |
 | WQL text, id and date values in `WHERE` must be quoted: `WHERE workdayID = '<% eventId %>'` | Runtime 400: "text or date target values must be in single or double quotes" | Wrap every `<% %>` value in single quotes, as Workday's `tuitionReimbursement` sample does |
 | Update `EquipmentItem` through the `updateItem` GraphQL mutation, not a REST `PATCH equipmentItems/{id}` | REST PATCH returned 400 "unrecognized field: status" (2026-09-19), although the same field worked over GraphQL and REST PATCH worked on the other two objects. Cause not known | Use `updateItem`, as `acknowledge.pmd` and `returnHandoff.pmd` do |
@@ -178,7 +186,7 @@ call (the output is named `response`).
 
 ```powershell
 python scripts\validate.py            # structure, labels, references, placeholders
-.\scripts\Invoke-ArcaneAuditor.ps1    # 42 rules — expect "No issues found!"
+.\scripts\Invoke-ArcaneAuditor.ps1    # 42 rules — expect exactly 1 finding: hrAccess in home.pmd
 ```
 
 `validate.py` covers what Arcane Auditor does not: label coverage, task/query reference

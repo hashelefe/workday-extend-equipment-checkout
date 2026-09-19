@@ -1,7 +1,8 @@
 {
   "id": "addItem",
   "securityDomains": [
-    "ManageEquipment"
+    "ManageEquipment",
+    "HrPartnerEquipment"
   ],
   "script": "<%
     const categoryOptions = function() {

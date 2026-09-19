@@ -1,7 +1,8 @@
 {
   "id": "shipment",
   "securityDomains": [
-    "ProcessEquipment"
+    "ProcessEquipment",
+    "HrPartnerEquipment"
   ],
   "script": "<%
     const theRequest = function() {

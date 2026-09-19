@@ -2,7 +2,8 @@
   "id": "returnDetails",
   "securityDomains": [
     "RequestEquipment",
-    "ProcessEquipment"
+    "ProcessEquipment",
+    "HrPartnerEquipment"
   ],
   "endPoints": [
     {

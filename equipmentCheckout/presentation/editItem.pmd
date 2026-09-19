@@ -1,7 +1,8 @@
 {
   "id": "editItem",
   "securityDomains": [
-    "ManageEquipment"
+    "ManageEquipment",
+    "HrPartnerEquipment"
   ],
   "script": "<%
     const theItem = function() {
@@ -20,9 +21,24 @@
       return eligibleLevel.value[0] == 'ALL' ? null : number:convertStringToInt(eligibleLevel.value[0]);
     };
 
+    /* Offices already in play: the editor's own work location plus every location on a catalog item. */
+    const knownPlaces = function() {
+      const places = [me.data.worker.data[0].primaryJob.location];
+      const items = empty(allEquipment.data.allEquipment.data) ? [] : allEquipment.data.allEquipment.data;
+      items.forEach(item => { places.add(item.location); places.add(item.eligibleLocation); });
+      return places.filter(place => {!empty(place)});
+    };
+
     const locationOptions = function() {
-      if (empty(locations.data)) { return []; }
-      return locations.data.map(place => {{'id': place.workdayID, 'descriptor': place.locationName}});
+      const seen = {:};
+      const options = [];
+      knownPlaces().forEach(place => {
+        if (empty(seen[place.workdayID.id])) {
+          seen.put(place.workdayID.id, true);
+          options.add({'id': place.workdayID.id, 'descriptor': place.descriptor});
+        }
+      });
+      return options;
     };
 
     const currentEligibility = function() {
@@ -48,11 +64,19 @@
       "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
     },
     {
-      "name": "locations",
-      "baseUrlType": "workday-wql",
-      "url": "data",
+      "name": "me",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
       "authType": "sso",
-      "wqlQuery": { "queryId": "locations" },
+      "graphQuery": { "queryId": "me" },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "allEquipment",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "graphQuery": { "queryId": "allEquipment" },
       "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
     }
   ],

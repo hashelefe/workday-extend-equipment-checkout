@@ -1,6 +1,6 @@
 {
   "id": "AppLinks",
-  "parameters": [ "title", "Browse", "MyRequests", "Manage", "HrRequests" ],
+  "parameters": [ "title", "Browse", "MyRequests" ],
   "header": {
     "title": "<% title %>",
     "icon": "wd-accent-tools"
@@ -21,19 +21,5 @@
         }
       }
     ]
-  },
-  "footer": [
-    {
-      "label": "<% Manage %>",
-      "taskReference": {
-        "taskId": "manage"
-      }
-    },
-    {
-      "label": "<% HrRequests %>",
-      "taskReference": {
-        "taskId": "hrRequests"
-      }
-    }
-  ]
+  }
 }

@@ -5,7 +5,8 @@
   "defaultSecurityDomains": [
     "ProcessEquipment",
     "ManageEquipment",
-    "RequestEquipment"
+    "RequestEquipment",
+    "HrPartnerEquipment"
   ],
   "defaultCollection": {
     "name": "equipmentReturns",

@@ -4,6 +4,6 @@
   "label": "Manage Equipment Requests",
   "routePath": "/hrRequests",
   "securityDomains": [
-    "ProcessEquipment"
+    "HrPartnerEquipment"
   ]
 }

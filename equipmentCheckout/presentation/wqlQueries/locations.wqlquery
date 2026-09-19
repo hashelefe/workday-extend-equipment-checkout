@@ -1,9 +1,0 @@
-{
-  "id": "locations",
-  "_comment": "Locations an item can be made eligible for. The locations data source is the one Workday's createAWorkEvent sample queries.",
-  "query": "
-    SELECT workdayID, locationName
-    FROM locations
-  ",
-  "limit": "200"
-}

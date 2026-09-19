@@ -11,6 +11,13 @@
       return rows.filter(row => {row.status == wanted});
     };
 
+    /* hrAccess reads an object only the HR Partner domain can see. A 403 there means 'not an HR partner',
+       so that endpoint deliberately does not fail on 403 - see CONVENTIONS.md, deliberate deviations. */
+    const isHrPartner = function() {
+      if (empty(hrAccess)) { return false; }
+      return hrAccess.data != null;
+    };
+
     const myRows = function() {
       return empty(myRequests.data.myRequests.data) ? [] : myRequests.data.myRequests.data;
     };
@@ -36,6 +43,14 @@
         }
       },
       "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    }
+,
+    {
+      "name": "hrAccess",
+      "baseUrlType": "app",
+      "url": "hrPartnerAccess?limit=1",
+      "authType": "sso",
+      "failOnStatusCodes": [ { "code": 400 } ]
     }
   ],
   "presentation": {
@@ -160,7 +175,29 @@
                     {
                       "type": "card",
                       "cardId": "AppLinks",
-                      "parameters": "<% {'title': presentationLabels.KeyTasks, 'Browse': presentationLabels.BrowseCatalog, 'MyRequests': presentationLabels.MyRequests, 'Manage': presentationLabels.ManageRequests, 'HrRequests': presentationLabels.HrRequestsTitle} %>"
+                      "parameters": "<% {'title': presentationLabels.KeyTasks, 'Browse': presentationLabels.BrowseCatalog, 'MyRequests': presentationLabels.MyRequests} %>"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "id": "hrPartnerSection",
+                  "title": "<% presentationLabels.HrPartnerTools %>",
+                  "render": "<% isHrPartner() %>",
+                  "children": [
+                    {
+                      "type": "button",
+                      "id": "hrRequestsButton",
+                      "action": "LINK",
+                      "label": "<% presentationLabels.HrRequestsTitle %>",
+                      "taskReference": { "taskId": "hrRequests" }
+                    },
+                    {
+                      "type": "button",
+                      "id": "manageRequestsButton",
+                      "action": "LINK",
+                      "label": "<% presentationLabels.ManageRequests %>",
+                      "taskReference": { "taskId": "manage" }
                     }
                   ]
                 }

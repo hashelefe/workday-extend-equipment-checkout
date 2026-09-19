@@ -2,7 +2,8 @@
   "id": "returnStart",
   "securityDomains": [
     "RequestEquipment",
-    "ProcessEquipment"
+    "ProcessEquipment",
+    "HrPartnerEquipment"
   ],
   "script": "<%
     const theRequest = function() {

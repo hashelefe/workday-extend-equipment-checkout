@@ -4,6 +4,7 @@
   "label": "Add Equipment Item",
   "routePath": "/addItem",
   "securityDomains": [
-    "ManageEquipment"
+    "ManageEquipment",
+    "HrPartnerEquipment"
   ]
 }

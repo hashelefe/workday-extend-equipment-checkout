@@ -1,7 +1,8 @@
 {
   "id": "returnItem",
   "securityDomains": [
-    "ManageEquipment"
+    "ManageEquipment",
+    "HrPartnerEquipment"
   ],
   "script": "<%
     const theRequest = function() {

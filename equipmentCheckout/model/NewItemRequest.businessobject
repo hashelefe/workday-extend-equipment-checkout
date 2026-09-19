@@ -5,7 +5,8 @@
   "defaultSecurityDomains": [
     "ManageEquipment",
     "ProcessEquipment",
-    "RequestEquipment"
+    "RequestEquipment",
+    "HrPartnerEquipment"
   ],
   "defaultCollection": {
     "name": "newItemRequests",

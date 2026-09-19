@@ -4,6 +4,7 @@
   "label": "Import Equipment Items",
   "routePath": "/importItems",
   "securityDomains": [
-    "ManageEquipment"
+    "ManageEquipment",
+    "HrPartnerEquipment"
   ]
 }
