@@ -3,6 +3,9 @@
   "securityDomains": [
     "RequestEquipment"
   ],
+  "include": [
+    "bpRefs.script"
+  ],
   "script": "<%
     const deliveryText = function(request) {
       return request.deliveryMethod == 'COURIER' ? presentationLabels.DeliveryCourier : presentationLabels.DeliveryPickup;
@@ -36,6 +39,39 @@
       "baseUrlType": "app",
       "url": "<% `newItemRequests?requestedBy={{me.data.worker.data[0].workdayID.id}}` %>",
       "authType": "sso",
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "checkoutEvents",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "wqlQuery": {
+        "queryId": "checkoutEvents",
+        "parameters": {
+          "applicationId": "<% site.applicationId %>"
+        }
+      },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "myReturns",
+      "baseUrlType": "app",
+      "url": "<% `equipmentReturns?returnedBy={{me.data.worker.data[0].workdayID.id}}` %>",
+      "authType": "sso",
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "returnEvents",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "wqlQuery": {
+        "queryId": "returnEvents",
+        "parameters": {
+          "applicationId": "<% site.applicationId %>"
+        }
+      },
       "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
     }
   ],
@@ -144,6 +180,7 @@
             {
               "type": "column",
               "columnId": "reqAction",
+              "label": "<% presentationLabels.Actions %>",
               "cellTemplate": {
                 "type": "button",
                 "id": "reqReturnButton",
@@ -156,6 +193,44 @@
                     "requestId": "<% req.workdayID.id %>"
                   }
                 }
+              }
+            },
+            {
+              "type": "column",
+              "columnId": "reqApproval",
+              "label": "<% presentationLabels.ApprovalProcess %>",
+              "cellTemplate": {
+                "type": "instanceList",
+                "id": "reqApprovalCell",
+                "enabled": false,
+                "render": "<% !empty(bpRefs.eventId(checkoutEvents, req.workdayID.id)) %>",
+                "instanceList": [
+                  {
+                    "type": "instance",
+                    "id": "<% bpRefs.eventId(checkoutEvents, req.workdayID.id) %>",
+                    "descriptor": "<% bpRefs.eventText(checkoutEvents, req.workdayID.id, presentationLabels.ApprovalProcess) %>",
+                    "wid": "<% bpRefs.eventId(checkoutEvents, req.workdayID.id) %>"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "column",
+              "columnId": "reqReturnProcess",
+              "label": "<% presentationLabels.ReturnProcess %>",
+              "cellTemplate": {
+                "type": "instanceList",
+                "id": "reqReturnProcessCell",
+                "enabled": false,
+                "render": "<% !empty(bpRefs.eventId(returnEvents, bpRefs.returnTargetId(myReturns, req.workdayID.id))) %>",
+                "instanceList": [
+                  {
+                    "type": "instance",
+                    "id": "<% bpRefs.eventId(returnEvents, bpRefs.returnTargetId(myReturns, req.workdayID.id)) %>",
+                    "descriptor": "<% bpRefs.eventText(returnEvents, bpRefs.returnTargetId(myReturns, req.workdayID.id), presentationLabels.ReturnProcess) %>",
+                    "wid": "<% bpRefs.eventId(returnEvents, bpRefs.returnTargetId(myReturns, req.workdayID.id)) %>"
+                  }
+                ]
               }
             }
           ]

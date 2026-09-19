@@ -3,6 +3,9 @@
   "securityDomains": [
     "RequestEquipment"
   ],
+  "include": [
+    "bpRefs.script"
+  ],
   "script": "<%
     /* The GraphQL criteria shape for plain TEXT fields is not covered by any Workday sample,
        so status narrowing happens here instead of in the query. See README, 'Filtering choices'. */
@@ -51,6 +54,19 @@
       "url": "hrPartnerAccess?limit=1",
       "authType": "sso",
       "failOnStatusCodes": [ { "code": 400 } ]
+    },
+    {
+      "name": "checkoutEvents",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "wqlQuery": {
+        "queryId": "checkoutEvents",
+        "parameters": {
+          "applicationId": "<% site.applicationId %>"
+        }
+      },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
     }
   ],
   "presentation": {
@@ -123,6 +139,23 @@
                         "id": "loanPurposeCell",
                         "value": "<% loan.purpose %>"
                       }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "loanActions",
+                      "label": "<% presentationLabels.Actions %>",
+                      "cellTemplate": {
+                        "type": "button",
+                        "id": "loanReturnButton",
+                        "action": "LINK",
+                        "label": "<% presentationLabels.StartReturn %>",
+                        "taskReference": {
+                          "taskId": "returnStart",
+                          "parameterBindings": {
+                            "requestId": "<% loan.workdayID.id %>"
+                          }
+                        }
+                      }
                     }
                   ]
                 },
@@ -158,6 +191,25 @@
                         "datePrecision": "DAY",
                         "dateFormat": "yyyy-MM-dd",
                         "value": "<% pending.requestedOn %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "pendingApproval",
+                      "label": "<% presentationLabels.ApprovalProcess %>",
+                      "cellTemplate": {
+                        "type": "instanceList",
+                        "id": "pendingApprovalCell",
+                        "enabled": false,
+                        "render": "<% !empty(bpRefs.eventId(checkoutEvents, pending.workdayID.id)) %>",
+                        "instanceList": [
+                          {
+                            "type": "instance",
+                            "id": "<% bpRefs.eventId(checkoutEvents, pending.workdayID.id) %>",
+                            "descriptor": "<% bpRefs.eventText(checkoutEvents, pending.workdayID.id, presentationLabels.ApprovalProcess) %>",
+                            "wid": "<% bpRefs.eventId(checkoutEvents, pending.workdayID.id) %>"
+                          }
+                        ]
                       }
                     }
                   ]

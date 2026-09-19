@@ -3,6 +3,9 @@
   "securityDomains": [
     "HrPartnerEquipment"
   ],
+  "include": [
+    "bpRefs.script"
+  ],
   "script": "<%
     const requestRows = function() {
       return empty(allRequests.data.allRequests.data) ? [] : allRequests.data.allRequests.data;
@@ -208,6 +211,25 @@
                       }
                     }
                   }
+                },
+                {
+                  "type": "column",
+                  "columnId": "apprApprovalRef",
+                  "label": "<% presentationLabels.ApprovalProcess %>",
+                  "cellTemplate": {
+                    "type": "instanceList",
+                    "id": "apprApprovalRefCell",
+                    "enabled": false,
+                    "render": "<% !empty(bpRefs.eventId(checkoutEvents, req.workdayID.id)) %>",
+                    "instanceList": [
+                      {
+                        "type": "instance",
+                        "id": "<% bpRefs.eventId(checkoutEvents, req.workdayID.id) %>",
+                        "descriptor": "<% bpRefs.eventText(checkoutEvents, req.workdayID.id, presentationLabels.ApprovalProcess) %>",
+                        "wid": "<% bpRefs.eventId(checkoutEvents, req.workdayID.id) %>"
+                      }
+                    ]
+                  }
                 }
               ]
             }
@@ -296,6 +318,25 @@
                       }
                     }
                   }
+                },
+                {
+                  "type": "column",
+                  "columnId": "hrLoanApprovalRef",
+                  "label": "<% presentationLabels.ApprovalProcess %>",
+                  "cellTemplate": {
+                    "type": "instanceList",
+                    "id": "hrLoanApprovalRefCell",
+                    "enabled": false,
+                    "render": "<% !empty(bpRefs.eventId(checkoutEvents, loan.workdayID.id)) %>",
+                    "instanceList": [
+                      {
+                        "type": "instance",
+                        "id": "<% bpRefs.eventId(checkoutEvents, loan.workdayID.id) %>",
+                        "descriptor": "<% bpRefs.eventText(checkoutEvents, loan.workdayID.id, presentationLabels.ApprovalProcess) %>",
+                        "wid": "<% bpRefs.eventId(checkoutEvents, loan.workdayID.id) %>"
+                      }
+                    ]
+                  }
                 }
               ]
             }
@@ -371,6 +412,25 @@
                         "eventId": "<% processId(returnEvents, handoff.id) %>"
                       }
                     }
+                  }
+                },
+                {
+                  "type": "column",
+                  "columnId": "retReturnRef",
+                  "label": "<% presentationLabels.ReturnProcess %>",
+                  "cellTemplate": {
+                    "type": "instanceList",
+                    "id": "retReturnRefCell",
+                    "enabled": false,
+                    "render": "<% !empty(bpRefs.eventId(returnEvents, handoff.id)) %>",
+                    "instanceList": [
+                      {
+                        "type": "instance",
+                        "id": "<% bpRefs.eventId(returnEvents, handoff.id) %>",
+                        "descriptor": "<% bpRefs.eventText(returnEvents, handoff.id, presentationLabels.ReturnProcess) %>",
+                        "wid": "<% bpRefs.eventId(returnEvents, handoff.id) %>"
+                      }
+                    ]
                   }
                 }
               ]
@@ -455,6 +515,44 @@
                   "columnId": "closedReturnedOn",
                   "label": "<% presentationLabels.ReturnedOn %>",
                   "cellTemplate": { "type": "date", "id": "closedReturnedOnCell", "datePrecision": "DAY", "dateFormat": "yyyy-MM-dd", "value": "<% closed.returnedOn %>" }
+                },
+                {
+                  "type": "column",
+                  "columnId": "closedApprovalRef",
+                  "label": "<% presentationLabels.ApprovalProcess %>",
+                  "cellTemplate": {
+                    "type": "instanceList",
+                    "id": "closedApprovalRefCell",
+                    "enabled": false,
+                    "render": "<% !empty(bpRefs.eventId(checkoutEvents, closed.workdayID.id)) %>",
+                    "instanceList": [
+                      {
+                        "type": "instance",
+                        "id": "<% bpRefs.eventId(checkoutEvents, closed.workdayID.id) %>",
+                        "descriptor": "<% bpRefs.eventText(checkoutEvents, closed.workdayID.id, presentationLabels.ApprovalProcess) %>",
+                        "wid": "<% bpRefs.eventId(checkoutEvents, closed.workdayID.id) %>"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "type": "column",
+                  "columnId": "closedReturnRef",
+                  "label": "<% presentationLabels.ReturnProcess %>",
+                  "cellTemplate": {
+                    "type": "instanceList",
+                    "id": "closedReturnRefCell",
+                    "enabled": false,
+                    "render": "<% !empty(bpRefs.eventId(returnEvents, bpRefs.returnTargetId(allReturns, closed.workdayID.id))) %>",
+                    "instanceList": [
+                      {
+                        "type": "instance",
+                        "id": "<% bpRefs.eventId(returnEvents, bpRefs.returnTargetId(allReturns, closed.workdayID.id)) %>",
+                        "descriptor": "<% bpRefs.eventText(returnEvents, bpRefs.returnTargetId(allReturns, closed.workdayID.id), presentationLabels.ReturnProcess) %>",
+                        "wid": "<% bpRefs.eventId(returnEvents, bpRefs.returnTargetId(allReturns, closed.workdayID.id)) %>"
+                      }
+                    ]
+                  }
                 }
               ]
             }

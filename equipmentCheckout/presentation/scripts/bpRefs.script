@@ -1,0 +1,33 @@
+/* Business process references for grids. A cell renders a Workday link to the process event
+   (history, awaiting persons, related actions) as an instanceList with one instance, whose
+   id/descriptor come from these functions. instanceList itself must be a literal array. */
+
+const eventFor = function(events, targetId) {
+  if (empty(events) || empty(events.data) || empty(targetId)) { return null; }
+  return events.data.find(bpEvent => {bpEvent.businessProcessTarget.id == targetId});
+};
+
+/* WID of the process event for a record, or null when it never entered a process. */
+const eventId = function(events, targetId) {
+  const bpEvent = eventFor(events, targetId);
+  return empty(bpEvent) ? null : bpEvent.workdayID;
+};
+
+const eventText = function(events, targetId, label) {
+  const bpEvent = eventFor(events, targetId);
+  if (empty(bpEvent)) { return label; }
+  return `{{label}} - {{bpEvent.status}}`;
+};
+
+/* The EquipmentReturn that closes a checkout request, i.e. the target of its return process. */
+const returnTargetId = function(returns, requestId) {
+  if (empty(returns) || empty(returns.data)) { return null; }
+  const handoff = returns.data.find(candidate => {candidate.checkoutRequest.id == requestId});
+  return empty(handoff) ? null : handoff.id;
+};
+
+{
+  "eventId": eventId,
+  "eventText": eventText,
+  "returnTargetId": returnTargetId
+}

@@ -2,11 +2,39 @@
   "id": "approve",
   "securityDomains": [
     "ManageEquipment",
-    "ProcessEquipment"
+    "ProcessEquipment",
+    "HrPartnerEquipment"
+  ],
+  "include": [
+    "bpRefs.script"
   ],
   "script": "<%
     const theRequest = function() {
       return empty(currentRequest) ? null : currentRequest.data.currentRequest.data[0];
+    };
+
+    /* Every earlier request by the same person, newest first, without the one being decided. */
+    const pastRequests = function() {
+      if (empty(requesterHistory) || empty(requesterHistory.data.myRequests.data)) { return []; }
+      const others = requesterHistory.data.myRequests.data.filter(past => {past.workdayID.id != theRequest().workdayID.id});
+      return others.sort(past => {past.requestedOn}).reverse();
+    };
+
+    /* Late means it came back after the due date, or is still out past it. */
+    const wasLate = function(past) {
+      if (empty(past.dueDate)) { return false; }
+      if (!empty(past.returnedOn)) { return past.returnedOn > past.dueDate; }
+      return past.status == 'APPROVED' && past.dueDate < date:getTodaysDate(date:getDateTimeZone(userTimeZone));
+    };
+
+    const lateCount = function() {
+      return pastRequests().filter(past => {wasLate(past)}).size();
+    };
+
+    const historySummary = function() {
+      const total = pastRequests().size();
+      const late = lateCount();
+      return `{{presentationLabels.PastRequestsPrefix}} {{total}} - {{presentationLabels.LatePrefix}} {{late}}`;
     };
   %>",
   "endPoints": [
@@ -34,6 +62,54 @@
         "queryId": "currentRequest",
         "parameters": {
           "requestId": "<% getRequestId.data[0].businessProcessTarget.id %>"
+        }
+      },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "requesterHistory",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "exclude": "<% empty(currentRequest) %>",
+      "graphQuery": {
+        "queryId": "myRequests",
+        "parameters": {
+          "requesterId": "<% currentRequest.data.currentRequest.data[0].requester.workdayID.id %>"
+        }
+      },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "checkoutEvents",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "wqlQuery": {
+        "queryId": "checkoutEvents",
+        "parameters": {
+          "applicationId": "<% site.applicationId %>"
+        }
+      },
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "requesterReturns",
+      "baseUrlType": "app",
+      "url": "<% `equipmentReturns?returnedBy={{currentRequest.data.currentRequest.data[0].requester.workdayID.id}}` %>",
+      "authType": "sso",
+      "exclude": "<% empty(currentRequest) %>",
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "returnEvents",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "wqlQuery": {
+        "queryId": "returnEvents",
+        "parameters": {
+          "applicationId": "<% site.applicationId %>"
         }
       },
       "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
@@ -96,6 +172,87 @@
               "label": "<% presentationLabels.Purpose %>",
               "enabled": false,
               "value": "<% theRequest().purpose %>"
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "id": "approveHistorySection",
+          "title": "<% presentationLabels.RequesterHistory %>",
+          "render": "<% !empty(currentRequest) %>",
+          "children": [
+            {
+              "type": "richText",
+              "id": "approveHistorySummary",
+              "enabled": false,
+              "value": "<% historySummary() %>"
+            },
+            {
+              "type": "grid",
+              "gridType": "LIST",
+              "id": "approveHistoryGrid",
+              "rows": "<% pastRequests() %>",
+              "rowVariableName": "past",
+              "enabled": false,
+              "doNotAdd": true,
+              "doNotRemove": true,
+              "label": "<% presentationLabels.RequesterHistory %>",
+              "render": "<% !empty(pastRequests()) %>",
+              "columns": [
+                { "type": "column", "columnId": "histItem", "label": "<% presentationLabels.Item %>", "sortableAndFilterable": true, "cellTemplate": { "type": "text", "id": "histItemCell", "value": "<% past.item.descriptor %>" } },
+                { "type": "column", "columnId": "histStatus", "label": "<% presentationLabels.Status %>", "sortableAndFilterable": true, "cellTemplate": { "type": "text", "id": "histStatusCell", "value": "<% past.status %>" } },
+                { "type": "column", "columnId": "histRequestedOn", "label": "<% presentationLabels.RequestedOn %>", "sortableAndFilterable": true, "cellTemplate": { "type": "date", "id": "histRequestedOnCell", "datePrecision": "DAY", "dateFormat": "yyyy-MM-dd", "value": "<% past.requestedOn %>" } },
+                { "type": "column", "columnId": "histDueDate", "label": "<% presentationLabels.DueDate %>", "cellTemplate": { "type": "date", "id": "histDueDateCell", "datePrecision": "DAY", "dateFormat": "yyyy-MM-dd", "value": "<% past.dueDate %>" } },
+                { "type": "column", "columnId": "histReturnedOn", "label": "<% presentationLabels.ReturnedOn %>", "cellTemplate": { "type": "date", "id": "histReturnedOnCell", "datePrecision": "DAY", "dateFormat": "yyyy-MM-dd", "value": "<% past.returnedOn %>" } },
+                { "type": "column", "columnId": "histLate", "label": "<% presentationLabels.ReturnedLate %>", "sortableAndFilterable": true, "cellTemplate": { "type": "text", "id": "histLateCell", "value": "<% wasLate(past) ? presentationLabels.Yes : presentationLabels.No %>" } },
+                { "type": "column", "columnId": "histPurpose", "label": "<% presentationLabels.Purpose %>", "cellTemplate": { "type": "text", "id": "histPurposeCell", "value": "<% past.purpose %>" } },
+                { "type": "column", "columnId": "histDecisionNote", "label": "<% presentationLabels.DecisionNote %>", "cellTemplate": { "type": "text", "id": "histDecisionNoteCell", "value": "<% past.decisionNote %>" } },
+                {
+                  "type": "column",
+                  "columnId": "histApproval",
+                  "label": "<% presentationLabels.ApprovalProcess %>",
+                  "cellTemplate": {
+                    "type": "instanceList",
+                    "id": "histApprovalCell",
+                    "enabled": false,
+                    "render": "<% !empty(bpRefs.eventId(checkoutEvents, past.workdayID.id)) %>",
+                    "instanceList": [
+                      {
+                        "type": "instance",
+                        "id": "<% bpRefs.eventId(checkoutEvents, past.workdayID.id) %>",
+                        "descriptor": "<% bpRefs.eventText(checkoutEvents, past.workdayID.id, presentationLabels.ApprovalProcess) %>",
+                        "wid": "<% bpRefs.eventId(checkoutEvents, past.workdayID.id) %>"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "type": "column",
+                  "columnId": "histReturnProcess",
+                  "label": "<% presentationLabels.ReturnProcess %>",
+                  "cellTemplate": {
+                    "type": "instanceList",
+                    "id": "histReturnProcessCell",
+                    "enabled": false,
+                    "render": "<% !empty(bpRefs.eventId(returnEvents, bpRefs.returnTargetId(requesterReturns, past.workdayID.id))) %>",
+                    "instanceList": [
+                      {
+                        "type": "instance",
+                        "id": "<% bpRefs.eventId(returnEvents, bpRefs.returnTargetId(requesterReturns, past.workdayID.id)) %>",
+                        "descriptor": "<% bpRefs.eventText(returnEvents, bpRefs.returnTargetId(requesterReturns, past.workdayID.id), presentationLabels.ReturnProcess) %>",
+                        "wid": "<% bpRefs.eventId(returnEvents, bpRefs.returnTargetId(requesterReturns, past.workdayID.id)) %>"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "type": "richText",
+              "id": "approveNoHistory",
+              "enabled": false,
+              "value": "<% presentationLabels.NoPastRequests %>",
+              "render": "<% empty(pastRequests()) %>"
             }
           ]
         },

@@ -3,6 +3,9 @@
   "securityDomains": [
     "HrPartnerEquipment"
   ],
+  "include": [
+    "bpRefs.script"
+  ],
   "script": "<%
     const byStatus = function(wanted) {
       if (empty(allRequests.data.allRequests.data)) { return []; }
@@ -54,6 +57,19 @@
       "baseUrlType": "app",
       "url": "newItemRequests?limit=100",
       "authType": "sso",
+      "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
+    },
+    {
+      "name": "checkoutEvents",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "wqlQuery": {
+        "queryId": "checkoutEvents",
+        "parameters": {
+          "applicationId": "<% site.applicationId %>"
+        }
+      },
       "failOnStatusCodes": [ { "code": 400 }, { "code": 403 } ]
     }
   ],
@@ -155,6 +171,25 @@
                     "id": "pendStatusCell",
                     "value": "<% req.status %>"
                   }
+                },
+                {
+                  "type": "column",
+                  "columnId": "pendApproval",
+                  "label": "<% presentationLabels.ApprovalProcess %>",
+                  "cellTemplate": {
+                    "type": "instanceList",
+                    "id": "pendApprovalCell",
+                    "enabled": false,
+                    "render": "<% !empty(bpRefs.eventId(checkoutEvents, req.workdayID.id)) %>",
+                    "instanceList": [
+                      {
+                        "type": "instance",
+                        "id": "<% bpRefs.eventId(checkoutEvents, req.workdayID.id) %>",
+                        "descriptor": "<% bpRefs.eventText(checkoutEvents, req.workdayID.id, presentationLabels.ApprovalProcess) %>",
+                        "wid": "<% bpRefs.eventId(checkoutEvents, req.workdayID.id) %>"
+                      }
+                    ]
+                  }
                 }
               ]
             }
@@ -236,6 +271,25 @@
                         "requestId": "<% loan.workdayID.id %>"
                       }
                     }
+                  }
+                },
+                {
+                  "type": "column",
+                  "columnId": "loanApproval",
+                  "label": "<% presentationLabels.ApprovalProcess %>",
+                  "cellTemplate": {
+                    "type": "instanceList",
+                    "id": "loanApprovalCell",
+                    "enabled": false,
+                    "render": "<% !empty(bpRefs.eventId(checkoutEvents, loan.workdayID.id)) %>",
+                    "instanceList": [
+                      {
+                        "type": "instance",
+                        "id": "<% bpRefs.eventId(checkoutEvents, loan.workdayID.id) %>",
+                        "descriptor": "<% bpRefs.eventText(checkoutEvents, loan.workdayID.id, presentationLabels.ApprovalProcess) %>",
+                        "wid": "<% bpRefs.eventId(checkoutEvents, loan.workdayID.id) %>"
+                      }
+                    ]
                   }
                 }
               ]

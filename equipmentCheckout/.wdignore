@@ -1,4 +1,4 @@
 # Local tooling and docs: not part of the Extend app
-scripts/
+/scripts/
 *.md
 samples/
